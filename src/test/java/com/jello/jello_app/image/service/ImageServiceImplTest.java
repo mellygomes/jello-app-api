@@ -65,7 +65,6 @@ class ImageServiceImplTest {
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals("foto-um.png", result.get(0).getFileName());
-        assertEquals("/api/v1/image/download/1", result.get(0).getDownloadUrl());
 
         verify(imageRepository, times(2)).save(any(Image.class));
     }

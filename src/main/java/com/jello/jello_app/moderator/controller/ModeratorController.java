@@ -1,4 +1,4 @@
-package com.jello.jello_app.user.controller;
+package com.jello.jello_app.moderator.controller;
 
 import com.jello.jello_app.common.dto.ApiResponse;
 import com.jello.jello_app.role.service.UserRoleService;
