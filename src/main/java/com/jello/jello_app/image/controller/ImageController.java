@@ -21,7 +21,7 @@ public class ImageController {
     @GetMapping("/{imageId}/download")
     public ResponseEntity<Resource> downloadImage(@PathVariable Long imageId){
         Image image = imageService.getImageById(imageId);
-        ByteArrayResource resource = new ByteArrayResource(image.getImage());
+        ByteArrayResource resource = new ByteArrayResource(image.getData());
 
         return ResponseEntity.ok().contentType(MediaType.parseMediaType(image.getFileType()))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + image.getFileName() + "\"")
