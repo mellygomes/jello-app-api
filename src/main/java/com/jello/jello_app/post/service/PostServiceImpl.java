@@ -108,45 +108,4 @@ public class PostServiceImpl implements PostService {
 
         return posts.map(PostMapper::toDto);
     }
-
-    @Override
-    @Transactional
-    public AiVoteResponseDTO incrementAiFeedback(Long postId) {
-
-        User user = authService.getAuthenticatedUser();
-        Post post = postRepository.findById(postId).orElseThrow(RuntimeException::new);
-
-        post.incrementAiCount();
-
-        PostAiVote postAiVote = new PostAiVote();
-        postAiVote.setUser(user);
-        postAiVote.setPost(post);
-
-        postAiVoteRepository.save(postAiVote);
-
-        return new AiVoteResponseDTO(
-                post.getAiCount(),
-                true
-        );
-    }
-
-    @Override
-    @Transactional
-    public AiVoteResponseDTO decrementAiFeedback(Long postId) {
-
-        User user = authService.getAuthenticatedUser();
-
-        int deletedRows = postAiVoteRepository.deleteByUserIdAndPostId(user.getId(), postId);
-        if (deletedRows == 0) {
-            throw new IllegalStateException("Usuário nao possui voto cadastrado nesse post.");
-        }
-
-        Post post = postRepository.findById(postId).orElseThrow(RuntimeException::new);
-        post.decrementAiCount();
-
-        return new AiVoteResponseDTO(
-                post.getAiCount(),
-                false
-        );
-    }
 }
