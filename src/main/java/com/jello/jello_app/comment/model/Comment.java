@@ -12,7 +12,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "comments")
+@Table(name = "tb_comment")
 @NoArgsConstructor
 @AllArgsConstructor
 public class Comment extends Auditable {
