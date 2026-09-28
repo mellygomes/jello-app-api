@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(
-        name = "post_ai_votes",
+        name = "tb_vote_ai",
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_user_post_vote",
                 columnNames = {"post_id", "user_id"}

@@ -15,6 +15,4 @@ public interface PostService {
     void deletePost(Long id);
     Post updatePost(CreatePostRequest request, Long postId);
     Page<PostDTO> getFeedPosts(int page, int size);
-    AiVoteResponseDTO incrementAiFeedback(Long id);
-    AiVoteResponseDTO decrementAiFeedback(Long id);
 }

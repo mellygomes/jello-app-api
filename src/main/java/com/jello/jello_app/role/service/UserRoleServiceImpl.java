@@ -16,35 +16,6 @@ public class UserRoleServiceImpl implements UserRoleService {
     private final UserRepository userRepository;
 
     @Override
-    public User grantAdmin(Long userId) {
-        Role adminRole = roleRepository.findByName(RoleType.ROLE_ADMIN.getName())
-                .orElseThrow(() -> new RuntimeException("ROLE_ADMIN não encontrado!"));
-        return userRepository.findById(userId)
-                .map(existingUser -> {
-                    existingUser.getRoles().add(adminRole);
-                    return userRepository.save(existingUser);
-                })
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado!"));
-    }
-
-    @Override
-    public User revokeAdmin(Long userId) {
-        Role adminRole = roleRepository.findByName(RoleType.ROLE_ADMIN.getName())
-                .orElseThrow(() -> new RuntimeException("ROLE_ADMIN não encontrado!"));
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Usuário nao encontrado"));
-
-        boolean removedAdmin = user.getRoles().removeIf(role -> role.getName().equals(adminRole.getName()));
-
-        if (!removedAdmin) {
-            throw new RuntimeException("Usuário não possui o cargo de ADMIN!");
-        }
-
-        return userRepository.save(user);
-    }
-
-    @Override
     public User grantModerator(Long userId) {
         Role moderatorRole = roleRepository.findByName(RoleType.ROLE_MODERATOR.getName())
                 .orElseThrow(() -> new RuntimeException("ROLE_MODERATOR não encontrado!"));

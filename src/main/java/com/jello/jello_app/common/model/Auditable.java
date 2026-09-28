@@ -9,9 +9,9 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import org.springframework.util.AlternativeJdkIdGenerator;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -24,7 +24,9 @@ public abstract class Auditable {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "primary_key_seq")
     @Column(name = "id", updatable = false)
     private Long id;
-    private String referenceId = new AlternativeJdkIdGenerator().generateId().toString();
+
+    @Column(name = "reference_id", nullable = false, updatable = false, unique = true)
+    private UUID referenceId;
 
     @CreatedBy
     @JoinColumn(name = "created_by")
@@ -37,7 +39,15 @@ public abstract class Auditable {
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    public void ensureReferenceId() {
+        if (this.referenceId == null) {
+            this.referenceId = UUID.randomUUID();
+        }
+    }
 }

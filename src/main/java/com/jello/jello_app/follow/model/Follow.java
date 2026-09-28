@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(
-        name = "follows",
+        name = "tb_follow",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"follower_id", "following_id"})
         }
@@ -28,14 +28,14 @@ public class Follow {
     private Long id;
 
     @CreatedDate
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     @ManyToOne
-    @JoinColumn(name = "follower_id")
+    @JoinColumn(name = "follower_id", nullable = false)
     private User follower;
 
     @ManyToOne
-    @JoinColumn(name = "following_id")
+    @JoinColumn(name = "following_id", nullable = false)
     private User following;
 }

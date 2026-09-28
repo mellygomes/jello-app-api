@@ -1,4 +1,4 @@
-package com.jello.jello_app.admin.controller;
+package com.jello.jello_app.moderator.controller;
 
 import com.jello.jello_app.common.dto.ApiResponse;
 import com.jello.jello_app.role.service.UserRoleService;
@@ -15,26 +15,26 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("${api.prefix}/admin")
-public class AdminController {
+@RequestMapping("${api.prefix}/moderator")
+public class ModeratorController {
 
     private final UserRoleService userRoleService;
 
     @PostMapping("/{userId}/grant")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse> grantAdmin(@PathVariable Long userId) {
-        User user = userRoleService.grantAdmin(userId);
+    public ResponseEntity<ApiResponse> grantModerator(@PathVariable Long userId) {
+        User user = userRoleService.grantModerator(userId);
 
         UserDTO userDto = UserMapper.toDto(user);
-        return ResponseEntity.ok(new ApiResponse("User updated to admin!", userDto));
+        return ResponseEntity.ok(new ApiResponse("User updated to moderator!", userDto));
     }
 
     @PostMapping("/{userId}/revoke")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse> revokeAdmin(@PathVariable Long userId) {
-        User user = userRoleService.revokeAdmin(userId);
+    public ResponseEntity<ApiResponse> revokeModerator(@PathVariable Long userId) {
+        User user = userRoleService.revokeModerator(userId);
 
         UserDTO userDto = UserMapper.toDto(user);
-        return ResponseEntity.ok(new ApiResponse("Admin promoted to client!", userDto));
+        return ResponseEntity.ok(new ApiResponse("Moderator updated to default user!", userDto));
     }
 }

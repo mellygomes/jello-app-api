@@ -12,11 +12,14 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "comments")
+@Table(name = "tb_comment")
 @NoArgsConstructor
 @AllArgsConstructor
 public class Comment extends Auditable {
 
+    private Long original_comment_id;
+
+    @Column(name = "content", nullable = false)
     private String content;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -1,23 +1,23 @@
-package com.jello.jello_app.role.model;
+package com.jello.jello_app.tag.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.jello.jello_app.user.model.User;
+import com.jello.jello_app.post.model.Post;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Entity
-@Table(name = "tb_role")
-public class Role {
+@Table(name = "tb_tag")
+public class Tag {
+
     @Id
     @SequenceGenerator(name = "primary_key_seq", sequenceName = "primary_key_seq", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "primary_key_seq")
@@ -27,7 +27,9 @@ public class Role {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @ManyToMany(mappedBy = "roles")
-    @JsonIgnore
-    private Collection<User> users = new HashSet<>();
+    @Column(name = "color", nullable = false)
+    private String color;
+
+    @ManyToMany(mappedBy = "tags")
+    private Set<Post> posts = new HashSet<>();
 }
