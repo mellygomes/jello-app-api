@@ -1,33 +1,34 @@
 package com.jello.jello_app.image.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.jello.jello_app.common.model.Auditable;
 import com.jello.jello_app.post.model.Post;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
-@Entity
 @Builder
-@Table(name = "images")
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Image {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@Entity
+@Table(name = "tb_image_post")
+// TODO: Renomear para PostImage
+public class Image extends Auditable {
 
+    @Column(name = "file_name", nullable = false)
     private String fileName;
+
+    @Column(name = "file_type", nullable = false)
     private String fileType;
-//    private String downloadUrl;
 
-    @Column(columnDefinition = "BYTEA")
-    private byte[] image;
+    @Column(name = "file_size", nullable = false)
+    private Long fileSize;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id")
-    @JsonIgnore
+    @Column(columnDefinition = "BYTEA", nullable = false)
+    private byte[] data;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "post_id", nullable = false)
     private Post post;
 }
