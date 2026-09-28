@@ -82,17 +82,4 @@ public class PostController {
         }
     }
 
-    @PostMapping("/{postId}/ai")
-    @PreAuthorize("@securityUtils.canModifyPost(#postId, authentication)")
-    public ResponseEntity<ApiResponse> incrementAiFeedback(@PathVariable Long postId) {
-        AiVoteResponseDTO responseDTO = postService.incrementAiFeedback(postId);
-        return ResponseEntity.ok(new ApiResponse("Tudo ok", responseDTO));
-    }
-
-    @DeleteMapping("/{postId}/ai")
-    @PreAuthorize("@securityUtils.canModifyPost(#postId, authentication)")
-    public ResponseEntity<ApiResponse> decrementAiFeedback(@PathVariable Long postId) {
-        AiVoteResponseDTO responseDTO = postService.decrementAiFeedback(postId);
-        return ResponseEntity.ok(new ApiResponse("Tudo ok", responseDTO));
-    }
 }
