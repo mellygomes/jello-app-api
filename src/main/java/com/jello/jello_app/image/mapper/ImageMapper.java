@@ -9,16 +9,9 @@ import java.io.IOException;
 
 public class ImageMapper {
     public static ImageDTO toDto(Image image) {
-
-        String downloadUrl = "/api/v1/image/download/";
-        if (image.getId() != null) {
-            downloadUrl = downloadUrl + image.getId();
-        }
-
         return ImageDTO.builder()
                 .id(image.getId())
                 .fileName(image.getFileName())
-                .downloadUrl(downloadUrl)
                 .build();
     }
 
@@ -26,7 +19,7 @@ public class ImageMapper {
         return Image.builder()
                 .fileName(file.getOriginalFilename())
                 .fileType(file.getContentType())
-                .image(file.getBytes())
+                .data(file.getBytes())
                 .post(post)
                 .build();
     }
