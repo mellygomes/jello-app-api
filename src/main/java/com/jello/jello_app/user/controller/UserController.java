@@ -22,7 +22,7 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/{userId}")
-    @PreAuthorize("#userId == authentication.principal.id or hasRole('ADMIN')")
+    @PreAuthorize("#userId == authentication.principal.id or hasRole('MODERATOR')")
     public ResponseEntity<ApiResponse> getUserById(@PathVariable Long userId) {
         try {
             User user = userService.getUserById(userId);
@@ -36,7 +36,7 @@ public class UserController {
     }
 
     @PutMapping("/{userId}")
-    @PreAuthorize("#userId == authentication.principal.id or hasRole('ADMIN')")
+    @PreAuthorize("#userId == authentication.principal.id or hasRole('MODERATOR')")
     public ResponseEntity<ApiResponse> updateUser(@RequestBody UpdateUserRequest request, @PathVariable Long userId) {
         try {
             User user = userService.updateUser(request, userId);
@@ -49,7 +49,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}")
-    @PreAuthorize("#userId == authentication.principal.id or hasRole('ADMIN')")
+    @PreAuthorize("#userId == authentication.principal.id or hasRole('MODERATOR')")
     public ResponseEntity<ApiResponse> deleteUser(@PathVariable Long userId) {
         try {
             userService.deleteUser(userId);

@@ -1,20 +1,20 @@
 package com.jello.jello_app.utils;
 
 import com.jello.jello_app.comment.model.Comment;
+import com.jello.jello_app.comment.repository.CommentRepository;
 import com.jello.jello_app.enumeration.RoleType;
 import com.jello.jello_app.post.model.Post;
-import com.jello.jello_app.comment.repository.CommentRepository;
 import com.jello.jello_app.post.repository.PostRepository;
-import com.jello.jello_app.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+
+import java.util.Objects;
 
 @Component("securityUtils")
 @RequiredArgsConstructor
 public class SecurityUtils {
     private final CommentRepository commentRepository;
-    private final UserRepository userRepository;
     private final PostRepository postRepository;
 
     public Boolean canDeleteComment(Long commentId, Authentication authentication) {
@@ -23,14 +23,14 @@ public class SecurityUtils {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("Comment not found!"));
 
-        Boolean isAdmin = authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals(RoleType.ROLE_ADMIN.getName()));
+        Boolean isModerator = authentication.getAuthorities().stream()
+                .anyMatch(a -> Objects.equals(a.getAuthority(), RoleType.ROLE_MODERATOR.getName()));
 
         Boolean isCommentOwner = comment.getUser().getUsername().equals(username);
 
         Boolean isPostOwner = comment.getPost().getUser().getUsername().equals(username);
 
-        return isAdmin || isCommentOwner || isPostOwner;
+        return isModerator || isCommentOwner || isPostOwner;
     }
 
     public Boolean canModifyPost(Long postId, Authentication authentication) {
@@ -39,11 +39,11 @@ public class SecurityUtils {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found!"));
 
-        Boolean isAdmin = authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals(RoleType.ROLE_ADMIN.getName()));
+        Boolean isModerator = authentication.getAuthorities().stream()
+                .anyMatch(a -> Objects.equals(a.getAuthority(), RoleType.ROLE_MODERATOR.getName()));
 
         Boolean isPostOwner = post.getUser().getUsername().equals(username);
 
-        return isAdmin || isPostOwner;
+        return isModerator || isPostOwner;
     }
 }
