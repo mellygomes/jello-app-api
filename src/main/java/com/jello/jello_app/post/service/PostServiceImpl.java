@@ -3,12 +3,10 @@ package com.jello.jello_app.post.service;
 import com.jello.jello_app.auth.service.AuthService;
 import com.jello.jello_app.follow.repository.FollowRepository;
 import com.jello.jello_app.image.service.ImageService;
-import com.jello.jello_app.post.dto.AiVoteResponseDTO;
 import com.jello.jello_app.post.dto.CreatePostRequest;
 import com.jello.jello_app.post.dto.PostDTO;
 import com.jello.jello_app.post.mapper.PostMapper;
 import com.jello.jello_app.post.model.Post;
-import com.jello.jello_app.post.model.PostAiVote;
 import com.jello.jello_app.post.repository.PostAiVoteRepository;
 import com.jello.jello_app.post.repository.PostRepository;
 import com.jello.jello_app.user.model.User;
@@ -62,6 +60,11 @@ public class PostServiceImpl implements PostService {
     public Post getPostById(Long id) {
         return postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post não encontrado!"));
+    }
+
+    @Override
+    public long getCountPostsByUserId(Long userId) {
+        return postRepository.countByUserId(userId);
     }
 
     @Override
