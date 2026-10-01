@@ -20,13 +20,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class ImageServiceTest {
+class PostImageServiceTest {
 
     @Mock
     private ImageRepository imageRepository;
 
     @InjectMocks
-    private ImageService imageService;
+    private PostImageService postImageService;
 
     // Testa o save da imagem
     @Test
@@ -59,7 +59,7 @@ class ImageServiceTest {
             return savedImage;
         });
 
-        List<ImageDTO> result = imageService.saveImageForPost(files, post);
+        List<ImageDTO> result = postImageService.saveImageForPost(files, post);
 
         assertNotNull(result);
         assertEquals(2, result.size());
@@ -81,7 +81,7 @@ class ImageServiceTest {
 
         RuntimeException exception = assertThrows(
                 RuntimeException.class,
-                () -> imageService.saveImageForPost(files, post)
+                () -> postImageService.saveImageForPost(files, post)
         );
 
         assertTrue(exception.getMessage().contains("Erro ao processar a imagem: corrompido-mesmo.png"));
@@ -98,7 +98,7 @@ class ImageServiceTest {
 
         when(imageRepository.findById(id)).thenReturn(Optional.of(imageMock));
 
-        Image image = imageService.getImageById(id);
+        Image image = postImageService.getImageById(id);
 
         assertEquals(imageMock.getFileName(), image.getFileName());
 
@@ -110,7 +110,7 @@ class ImageServiceTest {
     void shouldThrowExceptionToGetImageWhenInvalidId() {
         when(imageRepository.findById(1L)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> imageService.getImageById(1L));
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> postImageService.getImageById(1L));
 
         assertEquals("Imagem não encontrada!", exception.getMessage());
 
