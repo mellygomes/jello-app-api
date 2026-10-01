@@ -2,7 +2,7 @@ package com.jello.jello_app.post.service;
 
 import com.jello.jello_app.auth.service.AuthService;
 import com.jello.jello_app.follow.repository.FollowRepository;
-import com.jello.jello_app.image.service.ImageService;
+import com.jello.jello_app.image.service.PostImageService;
 import com.jello.jello_app.post.dto.CreatePostRequest;
 import com.jello.jello_app.post.dto.PostDTO;
 import com.jello.jello_app.post.model.Post;
@@ -28,10 +28,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class PostServiceImplTest {
+class PostServiceTest {
 
     @Mock
-    private ImageService imageService;
+    private PostImageService postImageService;
 
     @Mock
     private AuthService authService;
@@ -46,7 +46,7 @@ class PostServiceImplTest {
     private PostAiVoteRepository postAiVoteRepository;
 
     @InjectMocks
-    private PostServiceImpl postService;
+    private PostService postService;
 
     // Teste para simular criação de post com fluxo normal
     @Test
@@ -87,7 +87,7 @@ class PostServiceImplTest {
         assertEquals(request.getTitle(), result.getTitle());
 
         verify(authService, times(1)).getAuthenticatedUser();
-        verify(imageService, times(1)).saveImageForPost(any(), any());
+        verify(postImageService, times(1)).saveImageForPost(any(), any());
         verify(postRepository, times(1)).save(any());
     }
 
@@ -114,7 +114,7 @@ class PostServiceImplTest {
 
         verify(authService, times(1)).getAuthenticatedUser();
         verify(postRepository, times(1)).save(any());
-        verifyNoInteractions(imageService);
+        verifyNoInteractions(postImageService);
     }
 
     // Teste para recuperar post pelo ID

@@ -22,7 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class CommentServiceImplTest {
+class CommentServiceTest {
 
     @Mock
     private CommentRepository commentRepository;
@@ -34,7 +34,7 @@ class CommentServiceImplTest {
     private AuthService authService;
 
     @InjectMocks
-    private CommentServiceImpl commentService;
+    private CommentService commentService;
 
     private User user;
     private Post post;

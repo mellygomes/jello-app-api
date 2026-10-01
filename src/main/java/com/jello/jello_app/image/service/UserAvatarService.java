@@ -1,9 +1,7 @@
 package com.jello.jello_app.image.service;
 
-import com.jello.jello_app.image.mapper.ImageMapper;
 import com.jello.jello_app.image.model.UserAvatar;
 import com.jello.jello_app.image.repository.UserAvatarRepository;
-import com.jello.jello_app.user.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
@@ -47,8 +45,6 @@ public class UserAvatarService {
     public UserAvatar updateUserAvatar(UserAvatar avatar, MultipartFile image) {
 
         try {
-//            UserAvatar avatar = avatarRepository.findByUpdatedBy(userId)
-//                    .orElseThrow(() -> new RuntimeException("Imagem de perfil não encontrada!"));
 
             avatar.setFileName(image.getOriginalFilename());
             avatar.setFileType(image.getContentType());

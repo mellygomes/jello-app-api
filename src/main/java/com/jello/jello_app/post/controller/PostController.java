@@ -1,6 +1,5 @@
 package com.jello.jello_app.post.controller;
 
-import com.jello.jello_app.post.dto.AiVoteResponseDTO;
 import com.jello.jello_app.common.dto.ApiResponse;
 import com.jello.jello_app.post.dto.CreatePostRequest;
 import com.jello.jello_app.post.dto.PostDTO;
@@ -24,6 +23,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 @RequiredArgsConstructor
 @RequestMapping("${api.prefix}/posts")
 public class PostController {
+
     private final PostService postService;
 
     @PostMapping(value = "/create", consumes = "multipart/form-data")

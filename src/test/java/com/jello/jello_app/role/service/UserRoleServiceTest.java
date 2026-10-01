@@ -18,7 +18,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class UserRoleServiceImplTest {
+class UserRoleServiceTest {
 
     @Mock
     private RoleRepository roleRepository;
@@ -27,7 +27,7 @@ class UserRoleServiceImplTest {
     private UserRepository userRepository;
 
     @InjectMocks
-    private UserRoleServiceImpl userRoleService;
+    private UserRoleService userRoleService;
 
     // Testa a permissao de moderador dada ao usuario
     @Test
