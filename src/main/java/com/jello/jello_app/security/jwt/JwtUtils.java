@@ -32,7 +32,7 @@ public class JwtUtils {
                 .map(GrantedAuthority::getAuthority).toList();
 
         return Jwts.builder()
-                .subject(userPrincipal.getUsername())
+                .subject(userPrincipal.getId().toString())
                 .claim("roles", roles)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationTime))
@@ -68,13 +68,14 @@ public class JwtUtils {
         }
     }
 
-    public String getUsernameFromToken(String token) {
-        return Jwts.parser()
+    public Long getUserIdFromToken(String token) {
+        String id = Jwts.parser()
                 .verifyWith((SecretKey) key())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
+        return Long.valueOf(id);
     }
 
     private Key key() {

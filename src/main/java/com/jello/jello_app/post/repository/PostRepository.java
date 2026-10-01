@@ -26,4 +26,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             @Param("followingIds") List<Long> followingIds,
             Pageable pageable
     );
+
+    long countByUserId(Long userId);
 }

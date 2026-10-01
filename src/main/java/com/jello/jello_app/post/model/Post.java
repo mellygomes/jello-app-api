@@ -22,7 +22,7 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "posts")
+@Table(name = "tb_post")
 public class Post extends Auditable {
 
     @ManyToOne(fetch = FetchType.LAZY)

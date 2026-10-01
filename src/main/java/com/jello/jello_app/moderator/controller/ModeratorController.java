@@ -21,20 +21,20 @@ public class ModeratorController {
     private final UserRoleService userRoleService;
 
     @PostMapping("/{userId}/grant")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<ApiResponse> grantModerator(@PathVariable Long userId) {
         User user = userRoleService.grantModerator(userId);
 
         UserDTO userDto = UserMapper.toDto(user);
-        return ResponseEntity.ok(new ApiResponse("User updated to moderator!", userDto));
+        return ResponseEntity.ok(new ApiResponse("Usuário inserido como Moderador!", userDto));
     }
 
     @PostMapping("/{userId}/revoke")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<ApiResponse> revokeModerator(@PathVariable Long userId) {
         User user = userRoleService.revokeModerator(userId);
 
         UserDTO userDto = UserMapper.toDto(user);
-        return ResponseEntity.ok(new ApiResponse("Moderator updated to default user!", userDto));
+        return ResponseEntity.ok(new ApiResponse("Moderador atualizado como usuário comum!", userDto));
     }
 }

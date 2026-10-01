@@ -13,7 +13,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,13 +20,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class ImageServiceImplTest {
+class ImageServiceTest {
 
     @Mock
     private ImageRepository imageRepository;
 
     @InjectMocks
-    private ImageServiceImpl imageService;
+    private ImageService imageService;
 
     // Testa o save da imagem
     @Test

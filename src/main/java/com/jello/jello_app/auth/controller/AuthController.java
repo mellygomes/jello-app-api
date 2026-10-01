@@ -2,12 +2,12 @@ package com.jello.jello_app.auth.controller;
 
 import com.jello.jello_app.auth.dto.LoginRequest;
 import com.jello.jello_app.auth.dto.RegisterRequest;
+import com.jello.jello_app.auth.dto.UserResponseDTO;
 import com.jello.jello_app.auth.service.AuthService;
 import com.jello.jello_app.common.dto.ApiResponse;
 import com.jello.jello_app.security.jwt.JwtUtils;
 import com.jello.jello_app.security.user.AppUserDetails;
 import com.jello.jello_app.user.dto.UserDTO;
-import com.jello.jello_app.user.dto.UserResponseDTO;
 import com.jello.jello_app.user.mapper.UserMapper;
 import com.jello.jello_app.user.model.User;
 import com.jello.jello_app.user.service.UserService;
@@ -74,13 +74,17 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<ApiResponse> me(@AuthenticationPrincipal AppUserDetails userDetails) {
 
-        UserResponseDTO responseDTO = new UserResponseDTO(
-                userDetails.getId(),
-                userDetails.getUsername(),
-                userDetails.getEmail()
-        );
+        if (userDetails != null) {
+            UserResponseDTO responseDTO = new UserResponseDTO(
+                    userDetails.getId(),
+                    userDetails.getUsername(),
+                    userDetails.getEmail()
+            );
 
-        return ResponseEntity.ok().body(new ApiResponse("Usuário autenticado", responseDTO));
+            return ResponseEntity.ok().body(new ApiResponse("Usuário autenticado", responseDTO));
+        }
+
+        return ResponseEntity.ok().body(null);
     }
 
     private ResponseCookie buildResponseCookie(String jwt, Duration maxAge) {

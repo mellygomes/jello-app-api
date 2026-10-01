@@ -1,14 +1,12 @@
 package com.jello.jello_app.image.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jello.jello_app.common.model.Auditable;
-import com.jello.jello_app.post.model.Post;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import lombok.*;
 
+@Builder
 @Getter
 @Setter
 @AllArgsConstructor

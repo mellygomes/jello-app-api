@@ -14,7 +14,7 @@ CREATE TABLE public.tb_user
     password           VARCHAR(255)        NOT NULL,
     username           VARCHAR(255) UNIQUE NOT NULL,
     enabled            BOOLEAN             NOT NULL DEFAULT FALSE,
-    last_login         TIMESTAMPTZ         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_login         TIMESTAMPTZ                  DEFAULT CURRENT_TIMESTAMP,
     banned             BOOLEAN             NOT NULL DEFAULT FALSE,
     profile_picture_id BIGINT UNIQUE,
     profile_cover_id   BIGINT UNIQUE,
@@ -72,8 +72,10 @@ CREATE TABLE public.tb_profile_cover
 );
 
 -- Adiciona as constraints de FK de imagens de perfil e capa na tabela de usuarios
-ALTER TABLE tb_user ADD CONSTRAINT fk_user_profile_picture FOREIGN KEY (profile_picture_id) REFERENCES tb_profile_picture (id);
-ALTER TABLE tb_user ADD CONSTRAINT fk_user_profile_cover FOREIGN KEY (profile_cover_id) REFERENCES tb_profile_cover (id);
+ALTER TABLE tb_user
+    ADD CONSTRAINT fk_user_profile_picture FOREIGN KEY (profile_picture_id) REFERENCES tb_profile_picture (id);
+ALTER TABLE tb_user
+    ADD CONSTRAINT fk_user_profile_cover FOREIGN KEY (profile_cover_id) REFERENCES tb_profile_cover (id);
 
 -- Tabela de Cargos da aplicação (Role.java)
 CREATE TABLE public.tb_role
@@ -97,17 +99,17 @@ CREATE TABLE public.tb_user_role
 -- Tabela de Postagens (Post.java)
 CREATE TABLE public.tb_post
 (
-    id                      BIGINT PRIMARY KEY   DEFAULT nextval('primary_key_seq'),
-    reference_id            UUID UNIQUE NOT NULL,
-    user_id                 BIGINT      NOT NULL,
+    id                      BIGINT PRIMARY KEY    DEFAULT nextval('primary_key_seq'),
+    reference_id            UUID UNIQUE  NOT NULL,
+    user_id                 BIGINT       NOT NULL,
     moderator_classifier_id BIGINT,
     title                   VARCHAR(255) NOT NULL,
     content                 VARCHAR(255),
     ai_classified           BOOLEAN,
 
     -- Colunas de auditoria herdadas da super classe Auditable
-    created_at              TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at              TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at              TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at              TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by              BIGINT,
     updated_by              BIGINT,
 
@@ -119,16 +121,16 @@ CREATE TABLE public.tb_post
 -- Tabela de comentários de postagens (Comment.java)
 CREATE TABLE public.tb_comment
 (
-    id                  BIGINT PRIMARY KEY   DEFAULT nextval('primary_key_seq'),
+    id                  BIGINT PRIMARY KEY    DEFAULT nextval('primary_key_seq'),
     original_comment_id BIGINT,
-    reference_id        UUID UNIQUE NOT NULL,
-    post_id             BIGINT      NOT NULL,
-    user_id             BIGINT      NOT NULL,
+    reference_id        UUID UNIQUE  NOT NULL,
+    post_id             BIGINT       NOT NULL,
+    user_id             BIGINT       NOT NULL,
     content             VARCHAR(255) NOT NULL,
 
     -- Colunas de auditoria herdadas da super classe Auditable
-    created_at          TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by          BIGINT,
     updated_by          BIGINT,
 
@@ -145,7 +147,7 @@ CREATE TABLE public.tb_image_post
     id           BIGINT PRIMARY KEY    DEFAULT nextval('primary_key_seq'),
     -- ID de referencia herdado da super classe Auditable para ser usado nas requisicoes
     reference_id UUID UNIQUE  NOT NULL,
-    post_id   BIGINT NOT NULL,
+    post_id      BIGINT       NOT NULL,
     file_name    VARCHAR(255) NOT NULL,
     file_type    VARCHAR(100) NOT NULL,
     file_size    BIGINT       NOT NULL,
@@ -215,7 +217,7 @@ CREATE TABLE public.tb_report_user
 (
     id                   BIGINT PRIMARY KEY   DEFAULT nextval('primary_key_seq'),
     -- ID de referencia herdado da super classe Auditable para ser usado nas requisicoes
-    reference_id UUID UNIQUE  NOT NULL,
+    reference_id         UUID UNIQUE NOT NULL,
     reported_user_id     BIGINT      NOT NULL,
     reporter_user_id     BIGINT      NOT NULL,
     moderator_analyst_id BIGINT      NOT NULL,
@@ -239,7 +241,7 @@ CREATE TABLE public.tb_report_post
 (
     id                   BIGINT PRIMARY KEY   DEFAULT nextval('primary_key_seq'),
     -- ID de referencia herdado da super classe Auditable para ser usado nas requisicoes
-    reference_id UUID UNIQUE  NOT NULL,
+    reference_id         UUID UNIQUE NOT NULL,
     post_reported_id     BIGINT      NOT NULL,
     user_reporter_id     BIGINT      NOT NULL,
     moderator_analyst_id BIGINT      NOT NULL,

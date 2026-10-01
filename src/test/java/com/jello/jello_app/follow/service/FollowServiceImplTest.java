@@ -4,7 +4,7 @@ import com.jello.jello_app.auth.service.AuthServiceImpl;
 import com.jello.jello_app.follow.model.Follow;
 import com.jello.jello_app.follow.repository.FollowRepository;
 import com.jello.jello_app.user.model.User;
-import com.jello.jello_app.user.service.UserServiceImpl;
+import com.jello.jello_app.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,7 +14,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -27,7 +28,7 @@ class FollowServiceImplTest {
     private AuthServiceImpl authService;
 
     @Mock
-    private UserServiceImpl userService;
+    private UserService userService;
 
     @InjectMocks
     private FollowServiceImpl followService;
