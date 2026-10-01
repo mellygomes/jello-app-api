@@ -21,4 +21,10 @@ public class AppUserDetailsService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado!"));
         return AppUserDetails.buildUserDetails(user);
     }
+
+    public UserDetails loadUserById(Long userId) throws UsernameNotFoundException {
+       User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado!"));
+        return AppUserDetails.buildUserDetails(user);
+    }
 }
