@@ -7,6 +7,7 @@ import com.jello.jello_app.enumeration.RoleType;
 import com.jello.jello_app.event.UserEvent;
 import com.jello.jello_app.role.model.Role;
 import com.jello.jello_app.role.repository.RoleRepository;
+import com.jello.jello_app.user.dto.ProfileDTO;
 import com.jello.jello_app.user.dto.UpdateUserRequest;
 import com.jello.jello_app.user.model.User;
 import com.jello.jello_app.user.repository.UserRepository;
@@ -27,7 +28,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class UserServiceImplTest {
+class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
@@ -45,7 +46,7 @@ class UserServiceImplTest {
     private RoleRepository roleRepository;
 
     @InjectMocks
-    private UserServiceImpl userService;
+    private UserService userService;
 
     // Criacao de usuario mesmo com tudo valido
     @Test
@@ -173,7 +174,7 @@ class UserServiceImplTest {
         when(passwordEncoder.encode(updateRequest.getPassword())).thenReturn("senhaCriptografadaMesmo");
         when(userRepository.save(user)).thenReturn(user);
 
-        User userUpdated = userService.updateUser(updateRequest, id);
+        ProfileDTO userUpdated = userService.updateUser(updateRequest, id);
 
         verify(userRepository, times(1)).findById(id);
         verify(userRepository, times(1)).save(user);
