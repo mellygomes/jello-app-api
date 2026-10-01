@@ -1,4 +1,4 @@
-package com.jello.jello_app.user.dto;
+package com.jello.jello_app.auth.dto;
 
 public record UserResponseDTO (
         Long id,
