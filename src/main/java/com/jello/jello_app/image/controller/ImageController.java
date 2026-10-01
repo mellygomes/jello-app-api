@@ -3,7 +3,7 @@ package com.jello.jello_app.image.controller;
 import com.jello.jello_app.image.model.Image;
 import com.jello.jello_app.image.model.UserAvatar;
 import com.jello.jello_app.image.model.UserCover;
-import com.jello.jello_app.image.service.ImageService;
+import com.jello.jello_app.image.service.PostImageService;
 import com.jello.jello_app.image.service.UserAvatarService;
 import com.jello.jello_app.image.service.UserCoverService;
 import lombok.RequiredArgsConstructor;
@@ -22,13 +22,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("${api.prefix}/images")
 public class ImageController {
 
-    private final ImageService imageService;
+    private final PostImageService postImageService;
     private final UserAvatarService avatarService;
     private final UserCoverService coverService;
 
     @GetMapping("/{imageId}/download")
     public ResponseEntity<Resource> downloadImage(@PathVariable Long imageId) {
-        Image image = imageService.getImageById(imageId);
+        Image image = postImageService.getImageById(imageId);
         ByteArrayResource resource = new ByteArrayResource(image.getData());
 
         return ResponseEntity.ok().contentType(MediaType.parseMediaType(image.getFileType()))
