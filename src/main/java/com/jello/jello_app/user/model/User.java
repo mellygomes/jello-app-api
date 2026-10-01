@@ -38,7 +38,7 @@ public class User extends Auditable {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(name = "last_login", nullable = false)
+    @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
     @Column(unique = true, nullable = false)
@@ -55,7 +55,7 @@ public class User extends Auditable {
     @JoinColumn(name = "profile_cover_id", referencedColumnName = "id")
     private UserCover profileCover;
 
-    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "createdBy", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Post> posts;
 
     @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
