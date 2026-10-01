@@ -5,6 +5,12 @@ import com.jello.jello_app.confirmation.model.Confirmation;
 import com.jello.jello_app.confirmation.repository.ConfirmationRepository;
 import com.jello.jello_app.enumeration.RoleType;
 import com.jello.jello_app.event.UserEvent;
+import com.jello.jello_app.follow.repository.FollowRepository;
+import com.jello.jello_app.image.model.UserAvatar;
+import com.jello.jello_app.image.model.UserCover;
+import com.jello.jello_app.image.service.UserAvatarService;
+import com.jello.jello_app.image.service.UserCoverService;
+import com.jello.jello_app.post.service.PostService;
 import com.jello.jello_app.role.model.Role;
 import com.jello.jello_app.role.repository.RoleRepository;
 import com.jello.jello_app.user.dto.ProfileDTO;
@@ -44,6 +50,18 @@ class UserServiceTest {
 
     @Mock
     private RoleRepository roleRepository;
+
+    @Mock
+    private UserCoverService coverService;
+
+    @Mock
+    private UserAvatarService avatarService;
+
+    @Mock
+    private PostService postService;
+
+    @Mock
+    private FollowRepository followRepository;
 
     @InjectMocks
     private UserService userService;
@@ -85,11 +103,11 @@ class UserServiceTest {
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> userService.register(request));
 
-        assertEquals("Tipo de usuario não encontrado! (ROLE_USER)", exception.getMessage());
-
         verify(userRepository, never()).save(any(User.class));
         verify(confirmationRepository, never()).save(any(Confirmation.class));
         verify(applicationEventPublisher, never()).publishEvent(any(UserEvent.class));
+
+        assertEquals("Tipo de usuario não encontrado! (ROLE_USER)", exception.getMessage());
     }
 
     // Criacao de usuario falha quando tenta criar um usuario com dados ja existentes
@@ -98,13 +116,28 @@ class UserServiceTest {
         Role role = createRole();
         RegisterRequest registerRequest = createRegisterRequest();
 
+        UserCover cover = new UserCover();
+        cover.setFileName("Capa de teste");
+
+        UserAvatar avatar = new UserAvatar();
+        avatar.setFileName("Super avatar teste");
+
         when(roleRepository.findByName(RoleType.ROLE_USER.getName())).thenReturn(Optional.of(role));
         when(passwordEncoder.encode(registerRequest.getPassword())).thenReturn("Cripto");
+        when(coverService.createUserCover()).thenReturn(cover);
+        when(avatarService.createUserAvatar()).thenReturn(avatar);
         when(userRepository.save(any(User.class))).thenThrow(new DataIntegrityViolationException("Email já cadastrado"));
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> userService.register(registerRequest));
 
         assertEquals("Email já cadastrado", exception.getMessage());
+
+        verify(roleRepository, times(1)).findByName(any());
+        verify(passwordEncoder, times(1)).encode(any());
+        verify(coverService, times(1)).createUserCover();
+        verify(avatarService, times(1)).createUserAvatar();
+        verify(userRepository, times(1)).save(any());
+        verify(confirmationRepository, never()).save(any());
     }
 
     // Get do usuário quando existe
@@ -120,6 +153,8 @@ class UserServiceTest {
         User result = userService.getUserById(id);
 
         assertEquals(id, result.getId());
+
+        verify(roleRepository, times(1)).findById(anyLong());
     }
 
     // Get do usuario quando nao existe
@@ -132,7 +167,50 @@ class UserServiceTest {
         RuntimeException exception = assertThrows(RuntimeException.class, () -> userService.getUserById(id));
 
         assertEquals("Usuário não encontrado!", exception.getMessage());
-        verify(userRepository, times(1)).findById(id);
+
+        verify(userRepository, times(1)).findById(anyLong());
+    }
+
+    // Get do profile do usuario
+    @Test
+    void shouldGetUserProfile() {
+        Long id = 1L;
+        long posts = 2;
+        long followers = 4;
+        long followings = 23;
+        User user = new User();
+        user.setId(id);
+
+        when(userRepository.findById(id)).thenReturn(Optional.of(user));
+        when(postService.getCountPostsByUserId(id)).thenReturn(posts);
+        when(followRepository.countByFollowerId(id)).thenReturn(followers);
+        when(followRepository.countByFollowingId(id)).thenReturn(followings);
+
+        ProfileDTO profile = userService.getUserProfile(id);
+
+        assertEquals(followings, profile.getFollowers());
+        assertEquals(followers, profile.getFollowing());
+        assertEquals(posts, profile.getPosts());
+
+        verify(userRepository, times(1)).findById(any(Long.class));
+        verify(postService, times(1)).getCountPostsByUserId(any(Long.class));
+        verify(followRepository, times(1)).countByFollowingId(any(Long.class));
+        verify(followRepository, times(1)).countByFollowerId(any(Long.class));
+    }
+
+    // Get do profile do usuario quando usuario nao existe
+    @Test
+    void shouldThrowExceptionWhenUserProfileNotFound() {
+        Long id = 1L;
+
+        when(userRepository.findById(id)).thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> userService.getUserProfile(id));
+
+        assertEquals("Usuário não encontrado!", exception.getMessage());
+
+        verify(userRepository, times(1)).findById(anyLong());
+        verify(postService, never()).getCountPostsByUserId(anyLong());
     }
 
     // Delete de usuário quando existe
@@ -166,20 +244,28 @@ class UserServiceTest {
         UpdateUserRequest updateRequest = createUpdateRequest();
 
         Long id = 1L;
+        long posts = 2;
+        long followers = 3;
+        long followings = 4;
 
         User user = new User();
         user.setId(id);
 
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
-        when(passwordEncoder.encode(updateRequest.getPassword())).thenReturn("senhaCriptografadaMesmo");
+        when(postService.getCountPostsByUserId(1L)).thenReturn(posts);
+        when(followRepository.countByFollowerId(id)).thenReturn(followings);
+        when(followRepository.countByFollowingId(id)).thenReturn(followers);
         when(userRepository.save(user)).thenReturn(user);
 
         ProfileDTO userUpdated = userService.updateUser(updateRequest, id);
 
-        verify(userRepository, times(1)).findById(id);
-        verify(userRepository, times(1)).save(user);
-
         assertEquals("super mega nome", userUpdated.getFirstName());
+
+        verify(userRepository, times(1)).findById(anyLong());
+        verify(userRepository, times(1)).save(any(User.class));
+        verify(postService, times(1)).getCountPostsByUserId(anyLong());
+        verify(followRepository, times(1)).countByFollowerId(anyLong());
+        verify(followRepository, times(1)).countByFollowingId(anyLong());
     }
 
     // Atualizacao de usuario quando nao existe
