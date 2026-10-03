@@ -1,5 +1,6 @@
 package com.jello.jello_app.image.service;
 
+import com.jello.jello_app.image.mapper.ImageMapper;
 import com.jello.jello_app.image.model.UserAvatar;
 import com.jello.jello_app.image.repository.UserAvatarRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,13 +28,9 @@ public class UserAvatarService {
             byte[] bytes = imgResource.getInputStream().readAllBytes();
             String fileName = imgResource.getFilename();
             String fileType = "image/png";
-            long fileSyze = imgResource.contentLength();
+            long fileSize = imgResource.contentLength();
 
-            UserAvatar avatar = new UserAvatar();
-            avatar.setFileName(fileName);
-            avatar.setFileType(fileType);
-            avatar.setFileSize(fileSyze);
-            avatar.setData(bytes);
+            UserAvatar avatar = ImageMapper.toUserAvatar(fileName, fileType, fileSize, bytes);
 
             return avatarRepository.save(avatar);
 
