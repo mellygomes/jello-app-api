@@ -13,7 +13,7 @@ CREATE TABLE public.tb_user
     bio                VARCHAR(255),
     password           VARCHAR(255)        NOT NULL,
     username           VARCHAR(255) UNIQUE NOT NULL,
-    enabled            BOOLEAN             NOT NULL DEFAULT FALSE,
+    enabled            BOOLEAN             NOT NULL DEFAULT TRUE,
     last_login         TIMESTAMPTZ                  DEFAULT CURRENT_TIMESTAMP,
     banned             BOOLEAN             NOT NULL DEFAULT FALSE,
     profile_picture_id BIGINT UNIQUE,
@@ -105,7 +105,7 @@ CREATE TABLE public.tb_post
     moderator_classifier_id BIGINT,
     title                   VARCHAR(255) NOT NULL,
     content                 VARCHAR(255),
-    ai_classified           BOOLEAN,
+    ai_classified           BOOLEAN      NOT NULL DEFAULT FALSE,
 
     -- Colunas de auditoria herdadas da super classe Auditable
     created_at              TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -221,7 +221,7 @@ CREATE TABLE public.tb_report_user
     reported_user_id     BIGINT      NOT NULL,
     reporter_user_id     BIGINT      NOT NULL,
     moderator_analyst_id BIGINT      NOT NULL,
-    is_approved          BOOLEAN     NOT NULL,
+    is_approved          BOOLEAN     NOT NULL DEFAULT FALSE,
 
     -- Colunas de auditoria herdadas da super classe Auditable
     created_at           TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -245,7 +245,7 @@ CREATE TABLE public.tb_report_post
     post_reported_id     BIGINT      NOT NULL,
     user_reporter_id     BIGINT      NOT NULL,
     moderator_analyst_id BIGINT      NOT NULL,
-    is_approved          BOOLEAN     NOT NULL,
+    is_approved          BOOLEAN     NOT NULL DEFAULT FALSE,
 
     -- Colunas de auditoria herdadas da super classe Auditable
     created_at           TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,

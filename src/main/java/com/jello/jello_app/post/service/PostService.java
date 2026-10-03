@@ -7,7 +7,6 @@ import com.jello.jello_app.post.dto.CreatePostRequest;
 import com.jello.jello_app.post.dto.PostDTO;
 import com.jello.jello_app.post.mapper.PostMapper;
 import com.jello.jello_app.post.model.Post;
-import com.jello.jello_app.post.repository.PostAiVoteRepository;
 import com.jello.jello_app.post.repository.PostRepository;
 import com.jello.jello_app.user.model.User;
 import jakarta.transaction.Transactional;
@@ -29,12 +28,9 @@ public class PostService {
     private final AuthService authService;
     private final PostRepository postRepository;
     private final FollowRepository followRepository;
-    private final PostAiVoteRepository postAiVoteRepository;
 
     @Transactional
     public Post createPost(CreatePostRequest request, List<MultipartFile> images) {
-
-        Post savedPost = null;
         try {
             User user = authService.getAuthenticatedUser();
 
@@ -43,16 +39,16 @@ public class PostService {
             post.setContent(request.getContent());
             post.setUser(user);
 
-            savedPost = postRepository.save(post);
+            Post savedPost = postRepository.save(post);
 
             if (images != null && !images.isEmpty()) {
                 postImageService.saveImageForPost(images, savedPost);
             }
+
+            return savedPost;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
-        return savedPost;
     }
 
     public Post getPostById(Long id) {

@@ -32,8 +32,8 @@ public class User extends Auditable {
 
     private String bio;
 
-    private Boolean enabled;
-    private Boolean banned;
+    private boolean enabled;
+    private boolean banned;
 
     @Column(unique = true, nullable = false)
     private String email;

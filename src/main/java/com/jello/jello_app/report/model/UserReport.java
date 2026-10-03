@@ -30,6 +30,6 @@ public class UserReport extends Auditable {
     private Moderator moderatorAnalyst;
 
     @Column(name = "is_approved", nullable = false)
-    private Boolean isApproved;
+    private boolean isApproved;
 
 }
