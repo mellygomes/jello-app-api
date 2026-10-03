@@ -1,8 +1,8 @@
 package com.jello.jello_app.image.service;
 
 import com.jello.jello_app.image.dto.ImageDTO;
-import com.jello.jello_app.image.model.Image;
-import com.jello.jello_app.image.repository.ImageRepository;
+import com.jello.jello_app.image.model.PostImage;
+import com.jello.jello_app.image.repository.PostImageRepository;
 import com.jello.jello_app.post.model.Post;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.*;
 class PostImageServiceTest {
 
     @Mock
-    private ImageRepository imageRepository;
+    private PostImageRepository imageRepository;
 
     @InjectMocks
     private PostImageService postImageService;
@@ -51,8 +51,8 @@ class PostImageServiceTest {
 
         List<MultipartFile> files = List.of(file1, file2);
 
-        when(imageRepository.save(any(Image.class))).thenAnswer(invocation -> {
-            Image savedImage = invocation.getArgument(0);
+        when(imageRepository.save(any(PostImage.class))).thenAnswer(invocation -> {
+            PostImage savedImage = invocation.getArgument(0);
             if (savedImage.getId() == null) {
                 savedImage.setId(1L);
             }
@@ -65,7 +65,7 @@ class PostImageServiceTest {
         assertEquals(2, result.size());
         assertEquals("foto-um.png", result.get(0).getFileName());
 
-        verify(imageRepository, times(2)).save(any(Image.class));
+        verify(imageRepository, times(2)).save(any(PostImage.class));
     }
 
     // Testa o save da imagem quando gera erro ao ler algum arquivo
@@ -92,13 +92,13 @@ class PostImageServiceTest {
     @Test
     void shouldGetImageById() {
         Long id = 1L;
-        Image imageMock = new Image();
+        PostImage imageMock = new PostImage();
         imageMock.setId(id);
         imageMock.setFileName("super-imagem-mesmo.png");
 
         when(imageRepository.findById(id)).thenReturn(Optional.of(imageMock));
 
-        Image image = postImageService.getImageById(id);
+        PostImage image = postImageService.getImageById(id);
 
         assertEquals(imageMock.getFileName(), image.getFileName());
 

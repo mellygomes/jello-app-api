@@ -1,6 +1,6 @@
 package com.jello.jello_app.image.controller;
 
-import com.jello.jello_app.image.model.Image;
+import com.jello.jello_app.image.model.PostImage;
 import com.jello.jello_app.image.model.UserAvatar;
 import com.jello.jello_app.image.model.UserCover;
 import com.jello.jello_app.image.service.PostImageService;
@@ -28,7 +28,7 @@ public class ImageController {
 
     @GetMapping("/{imageId}/download")
     public ResponseEntity<Resource> downloadImage(@PathVariable Long imageId) {
-        Image image = postImageService.getImageById(imageId);
+        PostImage image = postImageService.getImageById(imageId);
         ByteArrayResource resource = new ByteArrayResource(image.getData());
 
         return ResponseEntity.ok().contentType(MediaType.parseMediaType(image.getFileType()))

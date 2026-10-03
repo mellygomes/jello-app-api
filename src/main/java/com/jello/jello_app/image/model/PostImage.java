@@ -1,6 +1,5 @@
 package com.jello.jello_app.image.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jello.jello_app.common.model.Auditable;
 import com.jello.jello_app.post.model.Post;
 import jakarta.persistence.*;
@@ -13,8 +12,7 @@ import lombok.*;
 @NoArgsConstructor
 @Entity
 @Table(name = "tb_image_post")
-// TODO: Renomear para PostImage
-public class Image extends Auditable {
+public class PostImage extends Auditable {
 
     @Column(name = "file_name", nullable = false)
     private String fileName;

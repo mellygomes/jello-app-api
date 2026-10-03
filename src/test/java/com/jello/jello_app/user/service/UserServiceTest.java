@@ -154,7 +154,7 @@ class UserServiceTest {
 
         assertEquals(id, result.getId());
 
-        verify(roleRepository, times(1)).findById(anyLong());
+        verify(userRepository, times(1)).findById(anyLong());
     }
 
     // Get do usuario quando nao existe

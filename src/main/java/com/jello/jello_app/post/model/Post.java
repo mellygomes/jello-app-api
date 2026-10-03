@@ -2,7 +2,7 @@ package com.jello.jello_app.post.model;
 
 import com.jello.jello_app.comment.model.Comment;
 import com.jello.jello_app.common.model.Auditable;
-import com.jello.jello_app.image.model.Image;
+import com.jello.jello_app.image.model.PostImage;
 import com.jello.jello_app.moderator.model.Moderator;
 import com.jello.jello_app.tag.model.Tag;
 import com.jello.jello_app.user.model.User;
@@ -37,8 +37,8 @@ public class Post extends Auditable {
     private String title;
     private String content;
 
-    @Column(name = "ai_classified")
-    private Boolean aiClassified;
+    @Column(name = "ai_classified", nullable = false)
+    private boolean aiClassified;
 
     @OneToMany(
             mappedBy = "post",
@@ -46,7 +46,7 @@ public class Post extends Auditable {
             orphanRemoval = true,
             fetch = FetchType.LAZY
     )
-    private List<Image> images = new ArrayList<>();
+    private List<PostImage> images = new ArrayList<>();
 
     @OneToMany(
             mappedBy = "post",

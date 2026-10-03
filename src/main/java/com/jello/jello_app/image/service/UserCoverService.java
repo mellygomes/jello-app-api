@@ -1,8 +1,8 @@
 package com.jello.jello_app.image.service;
 
+import com.jello.jello_app.image.mapper.ImageMapper;
 import com.jello.jello_app.image.model.UserCover;
 import com.jello.jello_app.image.repository.UserCoverRepository;
-import com.jello.jello_app.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
@@ -23,16 +23,12 @@ public class UserCoverService {
         try {
             ClassPathResource imgResource = new ClassPathResource("static/images/default-cover.png");
 
-            byte[] bytes = imgResource.getInputStream().readAllBytes();
             String fileName = imgResource.getFilename();
             String fileType = "image/png";
             long fileSize = imgResource.contentLength();
+            byte[] bytes = imgResource.getInputStream().readAllBytes();
 
-            UserCover cover = new UserCover();
-            cover.setFileName(fileName);
-            cover.setFileType(fileType);
-            cover.setFileSize(fileSize);
-            cover.setData(bytes);
+            UserCover cover = ImageMapper.toUserCover(fileName, fileType, fileSize, bytes);
 
             return coverRepository.save(cover);
         } catch (Exception e) {
