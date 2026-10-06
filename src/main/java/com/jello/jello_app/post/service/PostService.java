@@ -3,11 +3,15 @@ package com.jello.jello_app.post.service;
 import com.jello.jello_app.auth.service.AuthService;
 import com.jello.jello_app.follow.repository.FollowRepository;
 import com.jello.jello_app.image.service.PostImageService;
-import com.jello.jello_app.post.dto.CreatePostRequest;
-import com.jello.jello_app.post.dto.PostDTO;
+import com.jello.jello_app.post.dto.CreatePostRequestDTO;
+import com.jello.jello_app.post.dto.FilterRequestDTO;
+import com.jello.jello_app.post.dto.PostResponseDTO;
 import com.jello.jello_app.post.mapper.PostMapper;
 import com.jello.jello_app.post.model.Post;
 import com.jello.jello_app.post.repository.PostRepository;
+import com.jello.jello_app.post.repository.PostSpecification;
+import com.jello.jello_app.tag.model.Tag;
+import com.jello.jello_app.tag.service.TagService;
 import com.jello.jello_app.user.model.User;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -15,9 +19,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashSet;
 import java.util.List;
 
 @Service
@@ -28,9 +34,10 @@ public class PostService {
     private final AuthService authService;
     private final PostRepository postRepository;
     private final FollowRepository followRepository;
+    private final TagService tagService;
 
     @Transactional
-    public Post createPost(CreatePostRequest request, List<MultipartFile> images) {
+    public PostResponseDTO createPost(CreatePostRequestDTO request, List<MultipartFile> images) {
         try {
             User user = authService.getAuthenticatedUser();
 
@@ -39,13 +46,18 @@ public class PostService {
             post.setContent(request.getContent());
             post.setUser(user);
 
+            if (request.getTagIds() != null && !request.getTagIds().isEmpty()) {
+                List<Tag> tags = tagService.getAllTagsById(request.getTagIds());
+                post.setTags(new HashSet<>(tags));
+            }
+
             Post savedPost = postRepository.save(post);
 
             if (images != null && !images.isEmpty()) {
                 postImageService.saveImageForPost(images, savedPost);
             }
 
-            return savedPost;
+            return PostMapper.toDto(savedPost);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -67,7 +79,7 @@ public class PostService {
                 });
     }
 
-    public Post updatePost(CreatePostRequest request, Long postId) {
+    public Post updatePost(CreatePostRequestDTO request, Long postId) {
         return postRepository.findById(postId)
                 .map(existingPost -> {
                     existingPost.setTitle(request.getTitle());
@@ -77,7 +89,7 @@ public class PostService {
                 .orElseThrow(() -> new RuntimeException("Falha ao atualizar o Post. Post não encontrado!"));
     }
 
-    public Page<PostDTO> getFeedPosts(int page, int size) {
+    public Page<PostResponseDTO> getFeedPosts(int page, int size) {
         User user = authService.getAuthenticatedUser();
 
         Pageable pageable = PageRequest.of(
@@ -100,5 +112,26 @@ public class PostService {
         }
 
         return posts.map(PostMapper::toDto);
+    }
+
+    public Page<PostResponseDTO> findPosts(FilterRequestDTO filter, int page, int size) {
+        User user = authService.getAuthenticatedUser();
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by("createdAt").descending()
+        );
+
+        List<Long> followingIds = followRepository.findUsersFollowedBy(user.getId())
+                .stream()
+                .map(User::getId)
+                .toList();
+
+        Specification<Post> spec = Specification
+                .where(PostSpecification.withFilter(filter))
+                .and(PostSpecification.orderByFollowingUser(followingIds));
+
+        return postRepository.findAll(spec, pageable).map(PostMapper::toDto);
     }
 }

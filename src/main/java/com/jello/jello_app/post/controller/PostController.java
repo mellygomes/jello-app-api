@@ -1,8 +1,9 @@
 package com.jello.jello_app.post.controller;
 
 import com.jello.jello_app.common.dto.ApiResponse;
-import com.jello.jello_app.post.dto.CreatePostRequest;
-import com.jello.jello_app.post.dto.PostDTO;
+import com.jello.jello_app.post.dto.CreatePostRequestDTO;
+import com.jello.jello_app.post.dto.FilterRequestDTO;
+import com.jello.jello_app.post.dto.PostResponseDTO;
 import com.jello.jello_app.post.mapper.PostMapper;
 import com.jello.jello_app.post.model.Post;
 import com.jello.jello_app.post.service.PostService;
@@ -30,11 +31,11 @@ public class PostController {
     public ResponseEntity<ApiResponse> createPost(@RequestPart(value = "images") List<MultipartFile> images,
                                                   @RequestPart("post") String postRequest) {
         ObjectMapper mapper = new ObjectMapper();
-        CreatePostRequest request = mapper.readValue(postRequest, CreatePostRequest.class);
+        CreatePostRequestDTO request = mapper.readValue(postRequest, CreatePostRequestDTO.class);
 
         try {
-            Post createdPost = postService.createPost(request, images);
-            PostDTO post = PostMapper.toDto(createdPost);
+//            Post createdPost = postService.createPost(request, images);
+            PostResponseDTO post = postService.createPost(request, images);
             return ResponseEntity.ok(new ApiResponse("Post criado com sucesso!", post));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -56,10 +57,10 @@ public class PostController {
 
     @PutMapping("/{postId}")
     @PreAuthorize("@securityUtils.canModifyPost(#postId, authentication)")
-    public ResponseEntity<ApiResponse> updatePost(@PathVariable Long postId, @RequestBody CreatePostRequest request) {
+    public ResponseEntity<ApiResponse> updatePost(@PathVariable Long postId, @RequestBody CreatePostRequestDTO request) {
         try {
             Post post = postService.updatePost(request, postId);
-            PostDTO postResponse = PostMapper.toDto(post);
+            PostResponseDTO postResponse = PostMapper.toDto(post);
             return ResponseEntity.ok(new ApiResponse("Post atualizado com sucesso!", postResponse));
         } catch (Exception e) {
             return ResponseEntity.status(NOT_FOUND)
@@ -71,10 +72,11 @@ public class PostController {
     @GetMapping("/list")
     public ResponseEntity<ApiResponse> listPosts(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @ModelAttribute FilterRequestDTO request
     ) {
         try {
-            Page<PostDTO> posts = postService.getFeedPosts(page, size);
+            Page<PostResponseDTO> posts = postService.findPosts(request, page, size);
             return ResponseEntity.ok(new ApiResponse("Posts carregados com sucesso!", posts));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
