@@ -6,6 +6,7 @@ import com.jello.jello_app.image.service.PostImageService;
 import com.jello.jello_app.post.dto.CreatePostRequestDTO;
 import com.jello.jello_app.post.dto.FilterRequestDTO;
 import com.jello.jello_app.post.dto.PostResponseDTO;
+import com.jello.jello_app.post.dto.UpdatePostRequestDTO;
 import com.jello.jello_app.post.mapper.PostMapper;
 import com.jello.jello_app.post.model.Post;
 import com.jello.jello_app.post.repository.PostRepository;
@@ -79,7 +80,7 @@ public class PostService {
                 });
     }
 
-    public Post updatePost(CreatePostRequestDTO request, Long postId) {
+    public Post updatePost(UpdatePostRequestDTO request, Long postId) {
         return postRepository.findById(postId)
                 .map(existingPost -> {
                     existingPost.setTitle(request.getTitle());
@@ -87,31 +88,6 @@ public class PostService {
                     return postRepository.save(existingPost);
                 })
                 .orElseThrow(() -> new RuntimeException("Falha ao atualizar o Post. Post não encontrado!"));
-    }
-
-    public Page<PostResponseDTO> getFeedPosts(int page, int size) {
-        User user = authService.getAuthenticatedUser();
-
-        Pageable pageable = PageRequest.of(
-                page,
-                size,
-                Sort.by("createdAt").descending()
-        );
-
-        List<Long> followingIds = followRepository.findUsersFollowedBy(user.getId())
-                .stream()
-                .map(User::getId)
-                .toList();
-
-        Page<Post> posts;
-
-        if (followingIds.isEmpty()) {
-            posts = postRepository.findAllByOrderByCreatedAtDesc(pageable);
-        } else {
-            posts = postRepository.findFeedPosts(followingIds, pageable);
-        }
-
-        return posts.map(PostMapper::toDto);
     }
 
     public Page<PostResponseDTO> findPosts(FilterRequestDTO filter, int page, int size) {
