@@ -1,7 +1,7 @@
 package com.jello.jello_app.comment.service;
 
 import com.jello.jello_app.auth.service.AuthService;
-import com.jello.jello_app.comment.dto.CommentDTO;
+import com.jello.jello_app.comment.dto.CommentResponseDTO;
 import com.jello.jello_app.comment.model.Comment;
 import com.jello.jello_app.comment.repository.CommentRepository;
 import com.jello.jello_app.post.model.Post;
@@ -89,9 +89,10 @@ class CommentServiceTest {
         Comment comment1 = createComment(4L, "Comentario 1 mesmo", user, post);
         Comment comment2 = createComment(5L, "Comentario 2 mesmo", user, post);
 
+        when(postService.getPostById(post.getId())).thenReturn(post);
         when(commentRepository.findByPost(post)).thenReturn(List.of(comment1, comment2));
 
-        List<CommentDTO> result = commentService.getAllCommentsFromPost(post);
+        List<CommentResponseDTO> result = commentService.getAllCommentsFromPost(post.getId());
 
         assertEquals(2, result.size());
 

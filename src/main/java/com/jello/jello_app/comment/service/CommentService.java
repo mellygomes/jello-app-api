@@ -1,7 +1,7 @@
 package com.jello.jello_app.comment.service;
 
 import com.jello.jello_app.auth.service.AuthService;
-import com.jello.jello_app.comment.dto.CommentDTO;
+import com.jello.jello_app.comment.dto.CommentResponseDTO;
 import com.jello.jello_app.comment.model.Comment;
 import com.jello.jello_app.comment.repository.CommentRepository;
 import com.jello.jello_app.post.model.Post;
@@ -38,11 +38,12 @@ public class CommentService {
         return comment;
     }
 
-    public List<CommentDTO> getAllCommentsFromPost(Post post) {
+    public List<CommentResponseDTO> getAllCommentsFromPost(Long postId) {
+        Post post = postService.getPostById(postId);
         List<Comment> comments = commentRepository.findByPost(post);
 
         return comments.stream()
-                .map(com -> CommentDTO.builder()
+                .map(com -> CommentResponseDTO.builder()
                         .id(com.getId())
                         .postId(com.getPost().getId())
                         .user(com.getUser().getUsername())
