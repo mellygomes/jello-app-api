@@ -127,7 +127,6 @@ public class UserService {
         user.setEmail(request.getEmail());
         user.setUsername(request.getUsername());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setProfilePicture(null);
         user.setRoles(new HashSet<>(Set.of(roleUser)));
         user.setBio(null);
         user.setEnabled(true);
