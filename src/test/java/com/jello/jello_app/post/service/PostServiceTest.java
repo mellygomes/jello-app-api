@@ -3,8 +3,9 @@ package com.jello.jello_app.post.service;
 import com.jello.jello_app.auth.service.AuthService;
 import com.jello.jello_app.follow.repository.FollowRepository;
 import com.jello.jello_app.image.service.PostImageService;
-import com.jello.jello_app.post.dto.CreatePostRequest;
-import com.jello.jello_app.post.dto.PostDTO;
+import com.jello.jello_app.post.dto.CreatePostRequestDTO;
+import com.jello.jello_app.post.dto.PostResponseDTO;
+import com.jello.jello_app.post.dto.UpdatePostRequestDTO;
 import com.jello.jello_app.post.model.Post;
 import com.jello.jello_app.post.repository.PostAiVoteRepository;
 import com.jello.jello_app.post.repository.PostRepository;
@@ -17,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -51,7 +53,7 @@ class PostServiceTest {
     // Teste para simular criação de post com fluxo normal
     @Test
     void shouldCreatePost() {
-        CreatePostRequest request = new CreatePostRequest();
+        CreatePostRequestDTO request = new CreatePostRequestDTO();
         request.setTitle("Post Mega Foda");
         request.setContent("Descrição do post insana");
 
@@ -82,7 +84,7 @@ class PostServiceTest {
             return post;
         });
 
-        Post result = postService.createPost(request, files);
+        PostResponseDTO result = postService.createPost(request, files);
 
         assertEquals(request.getTitle(), result.getTitle());
 
@@ -94,7 +96,7 @@ class PostServiceTest {
     // Teste para simular criação de post com dados invalidos
     @Test
     void shouldFailWhenCreatePostWithInvalidData() {
-        CreatePostRequest request = new CreatePostRequest();
+        CreatePostRequestDTO request = new CreatePostRequestDTO();
         request.setTitle("Post Mega Foda");
         request.setContent("Descrição do post insana");
 
@@ -179,13 +181,13 @@ class PostServiceTest {
         assertEquals("Falha ao deletar Post. Post não encontrado!", exception.getMessage());
 
         verify(postRepository, times(1)).findById(anyLong());
-        verify(postRepository, times(0)).delete(any());
+        verify(postRepository, times(0)).delete(any(Post.class));
     }
 
     // Teste para simular atualizacao de post por ID
     @Test
     void shouldUpdatePostById() {
-        CreatePostRequest request = new CreatePostRequest();
+        UpdatePostRequestDTO request = new UpdatePostRequestDTO();
         request.setTitle("Post Mega Foda");
         request.setContent("Descrição do post insana");
 
@@ -219,7 +221,7 @@ class PostServiceTest {
     void shouldFailWhenUpdatePostWithInvalidId() {
         Long postId = 1L;
 
-        CreatePostRequest request = new CreatePostRequest();
+        UpdatePostRequestDTO request = new UpdatePostRequestDTO();
         request.setTitle("Post Mega Foda");
         request.setContent("Descrição do post insana");
 
@@ -244,28 +246,22 @@ class PostServiceTest {
         post.setId(1L);
         post.setTitle("Post do feed");
         post.setContent("Conteúdo do post");
-
-        when(authService.getAuthenticatedUser()).thenReturn(user);
-        when(followRepository.findUsersFollowedBy(user.getId()))
-                .thenReturn(List.of());
+        post.setUser(user);
 
         Page<Post> posts = new PageImpl<>(List.of(post));
 
-        when(postRepository.findAllByOrderByCreatedAtDesc(any(Pageable.class)))
-                .thenReturn(posts);
+        when(authService.getAuthenticatedUser()).thenReturn(user);
+        when(followRepository.findUsersFollowedBy(user.getId())).thenReturn(List.of());
+        when(postRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(posts);
 
-        Page<PostDTO> result = postService.getFeedPosts(0, 10);
+        Page<PostResponseDTO> result = postService.findPosts(null, 0, 10);
 
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
 
         verify(authService, times(1)).getAuthenticatedUser();
         verify(followRepository, times(1)).findUsersFollowedBy(user.getId());
-        verify(postRepository, times(1))
-                .findAllByOrderByCreatedAtDesc(any(Pageable.class));
-
-        verify(postRepository, never())
-                .findFeedPosts(anyList(), any(Pageable.class));
+        verify(postRepository, times(1)).findAll(any(Specification.class), any(Pageable.class));
     }
 
     // Teste para simular caminho falho ao tentar recuperar posts do feed
@@ -281,7 +277,7 @@ class PostServiceTest {
 
         RuntimeException exception = assertThrows(
                 RuntimeException.class,
-                () -> postService.getFeedPosts(0, 10)
+                () -> postService.findPosts(null, 0, 10)
         );
 
         assertEquals(

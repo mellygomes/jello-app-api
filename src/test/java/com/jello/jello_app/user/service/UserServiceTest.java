@@ -307,7 +307,7 @@ class UserServiceTest {
         updateRequest.setFirstName("super mega nome");
         updateRequest.setLastName("super sobrenome");
         updateRequest.setBio("biografia insana");
-        updateRequest.setPassword("novaSenhaMesmo");
+//        updateRequest.setPassword("novaSenhaMesmo");
 
         return updateRequest;
     }
