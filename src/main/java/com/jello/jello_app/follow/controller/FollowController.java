@@ -1,12 +1,9 @@
 package com.jello.jello_app.follow.controller;
 
-import com.jello.jello_app.common.dto.ApiResponse;
 import com.jello.jello_app.follow.service.FollowService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @RestController
 @RequiredArgsConstructor
@@ -16,24 +13,15 @@ public class FollowController {
     private final FollowService followService;
 
     @PostMapping("/{userId}")
-    public ResponseEntity<ApiResponse> follow(@PathVariable Long userId) {
-        try {
-            followService.followUser(userId);
-            return ResponseEntity.ok(new ApiResponse("Followed!", null));
-        } catch (Exception e) {
-            return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
-        }
-
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void follow(@PathVariable Long userId) {
+        followService.followUser(userId);
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity<ApiResponse> unfollow(@PathVariable Long userId) {
-        try {
-            followService.unfollowUser(userId);
-            return ResponseEntity.ok().body(new ApiResponse("Unfollowed!", null));
-        } catch (Exception e) {
-            return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
-        }
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void unfollow(@PathVariable Long userId) {
+        followService.unfollowUser(userId);
     }
 
 }
