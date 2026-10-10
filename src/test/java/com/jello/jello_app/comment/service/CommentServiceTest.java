@@ -2,6 +2,7 @@ package com.jello.jello_app.comment.service;
 
 import com.jello.jello_app.auth.service.AuthService;
 import com.jello.jello_app.comment.dto.CommentResponseDTO;
+import com.jello.jello_app.comment.exception.CommentNotFoundException;
 import com.jello.jello_app.comment.model.Comment;
 import com.jello.jello_app.comment.repository.CommentRepository;
 import com.jello.jello_app.post.model.Post;
@@ -115,12 +116,12 @@ class CommentServiceTest {
     void shouldThrowExceptionWhenDeletingCommentFails() {
         when(commentRepository.findById(comment.getId())).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(
-                RuntimeException.class,
+        CommentNotFoundException exception = assertThrows(
+                CommentNotFoundException.class,
                 () -> commentService.deleteComment(comment.getId())
         );
 
-        assertEquals("Comentário não encontrado!", exception.getMessage());
+        assertEquals("Comentário com ID 3 não encontrado.", exception.getMessage());
 
         verify(commentRepository, times(1)).findById(anyLong());
         verify(commentRepository, never()).delete(any());

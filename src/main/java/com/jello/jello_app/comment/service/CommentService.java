@@ -2,6 +2,7 @@ package com.jello.jello_app.comment.service;
 
 import com.jello.jello_app.auth.service.AuthService;
 import com.jello.jello_app.comment.dto.CommentResponseDTO;
+import com.jello.jello_app.comment.exception.CommentNotFoundException;
 import com.jello.jello_app.comment.model.Comment;
 import com.jello.jello_app.comment.repository.CommentRepository;
 import com.jello.jello_app.post.model.Post;
@@ -25,17 +26,11 @@ public class CommentService {
         Post post = postService.getPostById(postId);
 
         Comment comment = new Comment();
-        try {
-            comment.setContent(content);
-            comment.setPost(post);
-            comment.setUser(user);
+        comment.setContent(content);
+        comment.setPost(post);
+        comment.setUser(user);
 
-            commentRepository.save(comment);
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
-        }
-
-        return comment;
+        return commentRepository.save(comment);
     }
 
     public List<CommentResponseDTO> getAllCommentsFromPost(Long postId) {
@@ -55,7 +50,7 @@ public class CommentService {
     public void deleteComment(Long commentId) {
         commentRepository.findById(commentId)
                 .ifPresentOrElse(commentRepository::delete, () -> {
-                    throw new RuntimeException("Comentário não encontrado!");
+                    throw new CommentNotFoundException(commentId);
                 });
     }
 }
