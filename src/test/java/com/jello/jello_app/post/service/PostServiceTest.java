@@ -3,12 +3,16 @@ package com.jello.jello_app.post.service;
 import com.jello.jello_app.auth.service.AuthService;
 import com.jello.jello_app.follow.repository.FollowRepository;
 import com.jello.jello_app.image.service.PostImageService;
-import com.jello.jello_app.post.dto.CreatePostRequest;
-import com.jello.jello_app.post.dto.PostDTO;
+import com.jello.jello_app.post.dto.CreatePostRequestDTO;
+import com.jello.jello_app.post.dto.PostResponseDTO;
+import com.jello.jello_app.post.dto.UpdatePostRequestDTO;
+import com.jello.jello_app.post.exception.PostNotFoundException;
 import com.jello.jello_app.post.model.Post;
-import com.jello.jello_app.post.repository.PostAiVoteRepository;
 import com.jello.jello_app.post.repository.PostRepository;
+import com.jello.jello_app.tag.model.Tag;
+import com.jello.jello_app.tag.service.TagService;
 import com.jello.jello_app.user.model.User;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,11 +21,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,46 +50,43 @@ class PostServiceTest {
     private FollowRepository followRepository;
 
     @Mock
-    private PostAiVoteRepository postAiVoteRepository;
+    private TagService tagService;
 
     @InjectMocks
     private PostService postService;
 
+    private CreatePostRequestDTO request;
+    private UpdatePostRequestDTO updateRequest;
+    private User user;
+    private Post post;
+    private List<MultipartFile> files;
+
+    @BeforeEach
+    void setUp() {
+        request = createRequest();
+        updateRequest = createUpdateRequest();
+        user = createUser();
+        files = createFiles();
+        post = createPost();
+    }
+
     // Teste para simular criação de post com fluxo normal
     @Test
     void shouldCreatePost() {
-        CreatePostRequest request = new CreatePostRequest();
-        request.setTitle("Post Mega Foda");
-        request.setContent("Descrição do post insana");
-
-        User user = new User();
-        user.setId(1L);
-        user.setUsername("nick");
-
-        MultipartFile file1 = new MockMultipartFile(
-                "file1",
-                "foto-um.png",
-                "image/png",
-                "conteudo mesmo".getBytes()
+        List<Tag> tags = List.of(
+                new Tag(1L, "Tag 1", "#123123", Collections.emptySet()),
+                new Tag(2L, "Tag 2", "#123123", Collections.emptySet())
         );
-
-        MultipartFile file2 = new MockMultipartFile(
-                "file2",
-                "foto-dois.png",
-                "image/png",
-                "conteudo 2 mesmo".getBytes()
-        );
-
-        List<MultipartFile> files = List.of(file1, file2);
 
         when(authService.getAuthenticatedUser()).thenReturn(user);
+        when(tagService.getAllTagsById(request.getTagIds())).thenReturn(tags);
         when(postRepository.save(any(Post.class))).thenAnswer(invocation -> {
             Post post = invocation.getArgument(0);
             post.setId(1L);
             return post;
         });
 
-        Post result = postService.createPost(request, files);
+        PostResponseDTO result = postService.createPost(request, files);
 
         assertEquals(request.getTitle(), result.getTitle());
 
@@ -94,14 +98,6 @@ class PostServiceTest {
     // Teste para simular criação de post com dados invalidos
     @Test
     void shouldFailWhenCreatePostWithInvalidData() {
-        CreatePostRequest request = new CreatePostRequest();
-        request.setTitle("Post Mega Foda");
-        request.setContent("Descrição do post insana");
-
-        User user = new User();
-        user.setId(1L);
-        user.setUsername("nick");
-
         when(authService.getAuthenticatedUser()).thenReturn(user);
         when(postRepository.save(any(Post.class))).thenThrow(new RuntimeException("Erro ao criar post!"));
 
@@ -120,16 +116,9 @@ class PostServiceTest {
     // Teste para recuperar post pelo ID
     @Test
     void shouldGetPostById() {
-        Long postId = 1L;
+        when(postRepository.findById(1L)).thenReturn(Optional.of(post));
 
-        Post post = new Post();
-        post.setId(2L);
-        post.setTitle("Titulo post teste 2");
-        post.setContent("Conteudo do post 2");
-
-        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
-
-        Post result = postService.getPostById(postId);
+        Post result = postService.getPostById(1L);
 
         assertEquals(post.getTitle(), result.getTitle());
 
@@ -143,9 +132,12 @@ class PostServiceTest {
 
         when(postRepository.findById(postId)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> postService.getPostById(postId));
+        PostNotFoundException exception = assertThrows(
+                PostNotFoundException.class,
+                () -> postService.getPostById(postId)
+        );
 
-        assertEquals("Post não encontrado!", exception.getMessage());
+        assertEquals("Post com ID 1 não encontrado.", exception.getMessage());
         verify(postRepository, times(1)).findById(anyLong());
     }
 
@@ -153,11 +145,6 @@ class PostServiceTest {
     @Test
     void shouldDeletePostById() {
         Long postId = 1L;
-
-        Post post = new Post();
-        post.setId(2L);
-        post.setTitle("Titulo post teste 2");
-        post.setContent("Conteudo do post 2");
 
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 
@@ -174,31 +161,21 @@ class PostServiceTest {
 
         when(postRepository.findById(postId)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> postService.deletePost(postId));
+        PostNotFoundException exception = assertThrows(
+                PostNotFoundException.class,
+                () -> postService.deletePost(postId)
+        );
 
-        assertEquals("Falha ao deletar Post. Post não encontrado!", exception.getMessage());
+        assertEquals("Post com ID 1 não encontrado.", exception.getMessage());
 
         verify(postRepository, times(1)).findById(anyLong());
-        verify(postRepository, times(0)).delete(any());
+        verify(postRepository, times(0)).delete(any(Post.class));
     }
 
     // Teste para simular atualizacao de post por ID
     @Test
     void shouldUpdatePostById() {
-        CreatePostRequest request = new CreatePostRequest();
-        request.setTitle("Post Mega Foda");
-        request.setContent("Descrição do post insana");
-
-        User user = new User();
-        user.setId(1L);
-        user.setUsername("nick");
-
         Long postId = 1L;
-
-        Post post = new Post();
-        post.setId(2L);
-        post.setTitle("Titulo post teste 2");
-        post.setContent("Conteudo do post 2");
 
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
         when(postRepository.save(any(Post.class))).thenAnswer(invocation -> {
@@ -207,7 +184,7 @@ class PostServiceTest {
             return savedPost;
         });
 
-        Post result = postService.updatePost(request, postId);
+        Post result = postService.updatePost(updateRequest, postId);
 
         assertEquals(post.getTitle(), result.getTitle());
         verify(postRepository, times(1)).findById(anyLong());
@@ -219,15 +196,11 @@ class PostServiceTest {
     void shouldFailWhenUpdatePostWithInvalidId() {
         Long postId = 1L;
 
-        CreatePostRequest request = new CreatePostRequest();
-        request.setTitle("Post Mega Foda");
-        request.setContent("Descrição do post insana");
-
         when(postRepository.findById(postId)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> postService.updatePost(request, postId));
+        RuntimeException exception = assertThrows(PostNotFoundException.class, () -> postService.updatePost(updateRequest, postId));
 
-        assertEquals("Falha ao atualizar o Post. Post não encontrado!", exception.getMessage());
+        assertEquals("Post com ID 1 não encontrado.", exception.getMessage());
 
         verify(postRepository, times(1)).findById(anyLong());
         verify(postRepository, never()).save(any());
@@ -236,52 +209,32 @@ class PostServiceTest {
     // Teste para recuperar os posts do feed
     @Test
     void shouldGetFeedPosts() {
-        User user = new User();
-        user.setId(1L);
-        user.setUsername("fulano");
-
-        Post post = new Post();
-        post.setId(1L);
-        post.setTitle("Post do feed");
-        post.setContent("Conteúdo do post");
-
-        when(authService.getAuthenticatedUser()).thenReturn(user);
-        when(followRepository.findUsersFollowedBy(user.getId()))
-                .thenReturn(List.of());
-
         Page<Post> posts = new PageImpl<>(List.of(post));
 
-        when(postRepository.findAllByOrderByCreatedAtDesc(any(Pageable.class)))
-                .thenReturn(posts);
+        when(authService.getAuthenticatedUser()).thenReturn(user);
+        when(followRepository.findUsersFollowedBy(user.getId())).thenReturn(List.of());
+        when(postRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(posts);
 
-        Page<PostDTO> result = postService.getFeedPosts(0, 10);
+        Page<PostResponseDTO> result = postService.findPosts(null, 0, 10);
 
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
 
         verify(authService, times(1)).getAuthenticatedUser();
         verify(followRepository, times(1)).findUsersFollowedBy(user.getId());
-        verify(postRepository, times(1))
-                .findAllByOrderByCreatedAtDesc(any(Pageable.class));
-
-        verify(postRepository, never())
-                .findFeedPosts(anyList(), any(Pageable.class));
+        verify(postRepository, times(1)).findAll(any(Specification.class), any(Pageable.class));
     }
 
     // Teste para simular caminho falho ao tentar recuperar posts do feed
     @Test
     void shouldFailWhenGetFeedPosts() {
-        User user = new User();
-        user.setId(1L);
-        user.setUsername("fulano");
-
         when(authService.getAuthenticatedUser()).thenReturn(user);
         when(followRepository.findUsersFollowedBy(user.getId()))
                 .thenThrow(new RuntimeException("Erro ao recuperar usuários seguidos"));
 
         RuntimeException exception = assertThrows(
                 RuntimeException.class,
-                () -> postService.getFeedPosts(0, 10)
+                () -> postService.findPosts(null, 0, 10)
         );
 
         assertEquals(
@@ -294,4 +247,52 @@ class PostServiceTest {
         verifyNoInteractions(postRepository);
     }
 
+    private CreatePostRequestDTO createRequest() {
+        CreatePostRequestDTO request = new CreatePostRequestDTO();
+        request.setTitle("Post Mega Foda");
+        request.setContent("Descrição do post insana");
+        request.setTagIds(Set.of(1L, 2L));
+        return request;
+    }
+
+    private User createUser() {
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("nick");
+        user.setEmail("email@fake.com");
+        return user;
+    }
+
+    private List<MultipartFile> createFiles() {
+        MultipartFile file1 = new MockMultipartFile(
+                "file1",
+                "foto-um.png",
+                "image/png",
+                "conteudo mesmo".getBytes()
+        );
+
+        MultipartFile file2 = new MockMultipartFile(
+                "file2",
+                "foto-dois.png",
+                "image/png",
+                "conteudo 2 mesmo".getBytes()
+        );
+        return List.of(file1, file2);
+    }
+
+    private Post createPost() {
+        Post post = new Post();
+        post.setId(2L);
+        post.setTitle("Titulo post teste");
+        post.setContent("Conteudo do post");
+        post.setUser(user);
+        return post;
+    }
+
+    private UpdatePostRequestDTO createUpdateRequest() {
+        UpdatePostRequestDTO request = new UpdatePostRequestDTO();
+        request.setTitle("Post Mega Foda");
+        request.setContent("Descrição do post insana");
+        return request;
+    }
 }

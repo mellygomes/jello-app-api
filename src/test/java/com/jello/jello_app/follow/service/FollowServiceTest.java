@@ -1,6 +1,10 @@
 package com.jello.jello_app.follow.service;
 
 import com.jello.jello_app.auth.service.AuthService;
+import com.jello.jello_app.follow.exception.FollowAlreadyFollowedException;
+import com.jello.jello_app.follow.exception.SelfFollowException;
+import com.jello.jello_app.follow.exception.SelfUnfollowException;
+import com.jello.jello_app.follow.exception.UnfollowNotFollowedException;
 import com.jello.jello_app.follow.model.Follow;
 import com.jello.jello_app.follow.repository.FollowRepository;
 import com.jello.jello_app.user.model.User;
@@ -63,9 +67,12 @@ class FollowServiceTest {
         when(authService.getAuthenticatedUser()).thenReturn(follower);
         when(userService.getUserById(1L)).thenReturn(follower);
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> followService.followUser(follower.getId()));
+        SelfFollowException exception = assertThrows(
+                SelfFollowException.class,
+                () -> followService.followUser(follower.getId())
+        );
 
-        assertTrue(exception.getMessage().contains("Você não pode seguir a si mesmo!"));
+        assertTrue(exception.getMessage().contains("Usuário com ID 1 não pode seguir a si mesmo."));
 
         verify(followRepository, never()).save(any());
     }
@@ -77,9 +84,12 @@ class FollowServiceTest {
         when(userService.getUserById(2L)).thenReturn(following);
         when(followRepository.existsByFollowerAndFollowing(follower, following)).thenReturn(true);
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> followService.followUser(2L));
+        FollowAlreadyFollowedException exception = assertThrows(
+                FollowAlreadyFollowedException.class,
+                () -> followService.followUser(2L)
+        );
 
-        assertTrue(exception.getMessage().contains("Você já segue esse usuário!"));
+        assertTrue(exception.getMessage().contains("Não é possível seguir um usuário já seguido. ID: 2"));
 
         verify(followRepository, never()).save(any());
     }
@@ -107,9 +117,12 @@ class FollowServiceTest {
         when(authService.getAuthenticatedUser()).thenReturn(follower);
         when(userService.getUserById(1L)).thenReturn(follower);
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> followService.unfollowUser(follower.getId()));
+        SelfUnfollowException exception = assertThrows(
+                SelfUnfollowException.class,
+                () -> followService.unfollowUser(follower.getId())
+        );
 
-        assertTrue(exception.getMessage().contains("Você não pode deixar de seguir a si mesmo."));
+        assertTrue(exception.getMessage().contains("Usuário com ID 1 não pode deixar de seguir a si mesmo."));
 
         verify(followRepository, never()).save(any());
     }
@@ -121,9 +134,12 @@ class FollowServiceTest {
         when(userService.getUserById(2L)).thenReturn(following);
         when(followRepository.findByFollowerAndFollowing(follower, following)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> followService.unfollowUser(following.getId()));
+        UnfollowNotFollowedException exception = assertThrows(
+                UnfollowNotFollowedException.class,
+                () -> followService.unfollowUser(following.getId())
+        );
 
-        assertTrue(exception.getMessage().contains("Você não segue esse usuário"));
+        assertTrue(exception.getMessage().contains("Não é possível deixar de seguir um usuário que não segue. ID: 2"));
 
         verify(followRepository, never()).save(any());
     }

@@ -3,7 +3,7 @@ package com.jello.jello_app.post.model;
 import com.jello.jello_app.comment.model.Comment;
 import com.jello.jello_app.common.model.Auditable;
 import com.jello.jello_app.image.model.PostImage;
-import com.jello.jello_app.moderator.model.Moderator;
+import com.jello.jello_app.role.model.Moderator;
 import com.jello.jello_app.tag.model.Tag;
 import com.jello.jello_app.user.model.User;
 import jakarta.persistence.*;

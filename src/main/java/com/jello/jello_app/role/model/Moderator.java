@@ -1,4 +1,4 @@
-package com.jello.jello_app.moderator.model;
+package com.jello.jello_app.role.model;
 
 import com.jello.jello_app.user.model.User;
 import jakarta.persistence.*;

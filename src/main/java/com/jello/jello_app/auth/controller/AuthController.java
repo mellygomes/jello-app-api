@@ -4,7 +4,6 @@ import com.jello.jello_app.auth.dto.LoginRequest;
 import com.jello.jello_app.auth.dto.RegisterRequest;
 import com.jello.jello_app.auth.dto.UserResponseDTO;
 import com.jello.jello_app.auth.service.AuthService;
-import com.jello.jello_app.common.dto.ApiResponse;
 import com.jello.jello_app.security.jwt.JwtUtils;
 import com.jello.jello_app.security.user.AppUserDetails;
 import com.jello.jello_app.user.dto.UserDTO;
@@ -13,7 +12,6 @@ import com.jello.jello_app.user.model.User;
 import com.jello.jello_app.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -21,8 +19,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
-
-import static org.springframework.http.HttpStatus.CONFLICT;
 
 @RestController
 @RequiredArgsConstructor
@@ -34,57 +30,37 @@ public class AuthController {
     private final JwtUtils jwtUtils;
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse> login(@RequestBody LoginRequest request) {
-        try {
-            Authentication authentication = authService.login(request);
+    public ResponseEntity<Void> login(@RequestBody LoginRequest request) {
+        Authentication authentication = authService.login(request);
+        String jwt = jwtUtils.generateTokenForUser(authentication);
+        ResponseCookie cookie = buildResponseCookie(jwt, Duration.ofHours(1));
 
-            String jwt = jwtUtils.generateTokenForUser(authentication);
-            ResponseCookie cookie = buildResponseCookie(jwt, Duration.ofHours(1));
-
-            return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ApiResponse(e.getMessage(), null));
-        }
+        return ResponseEntity.noContent().header(HttpHeaders.SET_COOKIE, cookie.toString()).build();
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse> register(@RequestBody RegisterRequest request) {
-        try {
-            User user = userService.register(request);
-            UserDTO userDTO = UserMapper.toDto(user);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(new ApiResponse("Registered!", userDTO));
-        } catch (Exception e) {
-            return ResponseEntity.status(CONFLICT)
-                    .body(new ApiResponse(e.getMessage(), null));
-        }
+    public UserDTO register(@RequestBody RegisterRequest request) {
+        User user = userService.register(request);
+        return UserMapper.toDto(user);
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse> logout() {
+    public ResponseEntity<Void> logout() {
         ResponseCookie cleanCookie = buildResponseCookie("", Duration.ZERO);
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cleanCookie.toString())
-                .body(new ApiResponse("Logout realizado com sucesso mesmo meu dog!", null));
+        return ResponseEntity.noContent().header(HttpHeaders.SET_COOKIE, cleanCookie.toString()).build();
     }
 
     // Valida usuario logado e retorna dados para usar no front
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse> me(@AuthenticationPrincipal AppUserDetails userDetails) {
-
+    public UserResponseDTO me(@AuthenticationPrincipal AppUserDetails userDetails) {
+        UserResponseDTO responseDTO = new UserResponseDTO();
         if (userDetails != null) {
-            UserResponseDTO responseDTO = new UserResponseDTO(
-                    userDetails.getId(),
-                    userDetails.getUsername(),
-                    userDetails.getEmail()
-            );
+            responseDTO.setId(userDetails.getId());
+            responseDTO.setUsername(userDetails.getUsername());
+            responseDTO.setEmail(userDetails.getEmail());
 
-            return ResponseEntity.ok().body(new ApiResponse("Usuário autenticado", responseDTO));
         }
-
-        return ResponseEntity.ok().body(null);
+        return responseDTO;
     }
 
     private ResponseCookie buildResponseCookie(String jwt, Duration maxAge) {

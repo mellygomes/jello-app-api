@@ -11,7 +11,7 @@ public class UpdateUserRequest {
     private String bio;
     private String email;
     private String username;
-    private String password;
+//    private String password;
     private MultipartFile avatar;
     private MultipartFile cover;
 

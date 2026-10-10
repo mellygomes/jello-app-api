@@ -6,6 +6,8 @@ import com.jello.jello_app.image.service.PostImageService;
 import com.jello.jello_app.post.dto.CreatePostRequestDTO;
 import com.jello.jello_app.post.dto.FilterRequestDTO;
 import com.jello.jello_app.post.dto.PostResponseDTO;
+import com.jello.jello_app.post.dto.UpdatePostRequestDTO;
+import com.jello.jello_app.post.exception.PostNotFoundException;
 import com.jello.jello_app.post.mapper.PostMapper;
 import com.jello.jello_app.post.model.Post;
 import com.jello.jello_app.post.repository.PostRepository;
@@ -38,80 +40,47 @@ public class PostService {
 
     @Transactional
     public PostResponseDTO createPost(CreatePostRequestDTO request, List<MultipartFile> images) {
-        try {
-            User user = authService.getAuthenticatedUser();
+        User user = authService.getAuthenticatedUser();
 
-            Post post = new Post();
-            post.setTitle(request.getTitle());
-            post.setContent(request.getContent());
-            post.setUser(user);
+        Post post = new Post();
+        post.setTitle(request.getTitle());
+        post.setContent(request.getContent());
+        post.setUser(user);
 
-            if (request.getTagIds() != null && !request.getTagIds().isEmpty()) {
-                List<Tag> tags = tagService.getAllTagsById(request.getTagIds());
-                post.setTags(new HashSet<>(tags));
-            }
-
-            Post savedPost = postRepository.save(post);
-
-            if (images != null && !images.isEmpty()) {
-                postImageService.saveImageForPost(images, savedPost);
-            }
-
-            return PostMapper.toDto(savedPost);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        if (request.getTagIds() != null && !request.getTagIds().isEmpty()) {
+            List<Tag> tags = tagService.getAllTagsById(request.getTagIds());
+            post.setTags(new HashSet<>(tags));
         }
+
+        Post savedPost = postRepository.save(post);
+
+        if (images != null && !images.isEmpty()) {
+            postImageService.saveImageForPost(images, savedPost);
+        }
+
+        return PostMapper.toDto(savedPost);
     }
 
     public Post getPostById(Long id) {
         return postRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Post não encontrado!"));
-    }
-
-    public long getCountPostsByUserId(Long userId) {
-        return postRepository.countByUserId(userId);
+                .orElseThrow(() -> new PostNotFoundException(id));
     }
 
     public void deletePost(Long id) {
         postRepository.findById(id)
                 .ifPresentOrElse(postRepository::delete, () -> {
-                    throw new RuntimeException("Falha ao deletar Post. Post não encontrado!");
+                    throw new PostNotFoundException(id);
                 });
     }
 
-    public Post updatePost(CreatePostRequestDTO request, Long postId) {
+    public Post updatePost(UpdatePostRequestDTO request, Long postId) {
         return postRepository.findById(postId)
                 .map(existingPost -> {
                     existingPost.setTitle(request.getTitle());
                     existingPost.setContent(request.getContent());
                     return postRepository.save(existingPost);
                 })
-                .orElseThrow(() -> new RuntimeException("Falha ao atualizar o Post. Post não encontrado!"));
-    }
-
-    public Page<PostResponseDTO> getFeedPosts(int page, int size) {
-        User user = authService.getAuthenticatedUser();
-
-        Pageable pageable = PageRequest.of(
-                page,
-                size,
-                Sort.by("createdAt").descending()
-        );
-
-        List<Long> followingIds = followRepository.findUsersFollowedBy(user.getId())
-                .stream()
-                .map(User::getId)
-                .toList();
-
-        Page<Post> posts;
-
-        if (followingIds.isEmpty()) {
-            posts = postRepository.findAllByOrderByCreatedAtDesc(pageable);
-        } else {
-            posts = postRepository.findFeedPosts(followingIds, pageable);
-        }
-
-        return posts.map(PostMapper::toDto);
+                .orElseThrow(() -> new PostNotFoundException(postId));
     }
 
     public Page<PostResponseDTO> findPosts(FilterRequestDTO filter, int page, int size) {
