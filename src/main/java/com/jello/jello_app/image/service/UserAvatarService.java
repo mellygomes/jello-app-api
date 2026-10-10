@@ -1,5 +1,7 @@
 package com.jello.jello_app.image.service;
 
+import com.jello.jello_app.image.exception.AvatarImageNotFoundException;
+import com.jello.jello_app.image.exception.FileReadException;
 import com.jello.jello_app.image.mapper.ImageMapper;
 import com.jello.jello_app.image.model.UserAvatar;
 import com.jello.jello_app.image.repository.UserAvatarRepository;
@@ -9,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 @Service
 @RequiredArgsConstructor
@@ -18,25 +21,27 @@ public class UserAvatarService {
 
     public UserAvatar getAvatarById(Long avatarId) {
         return avatarRepository.findById(avatarId)
-                .orElseThrow(() -> new RuntimeException("Imagem de perfil não encontrada!"));
+                .orElseThrow(() -> new AvatarImageNotFoundException(avatarId));
     }
 
     public UserAvatar createUserAvatar() {
-        try {
-            ClassPathResource imgResource = new ClassPathResource("static/images/default-avatar.png");
+        ClassPathResource imgResource = new ClassPathResource("static/images/default-avatar.png");
+        String fileName = imgResource.getFilename();
+        String fileType = "image/png";
+        byte[] bytes;
+        long fileSize;
 
-            byte[] bytes = imgResource.getInputStream().readAllBytes();
-            String fileName = imgResource.getFilename();
-            String fileType = "image/png";
-            long fileSize = imgResource.contentLength();
+        try (InputStream in = imgResource.getInputStream()) {
 
-            UserAvatar avatar = ImageMapper.toUserAvatar(fileName, fileType, fileSize, bytes);
+            fileSize = imgResource.contentLength();
+            bytes = in.readAllBytes();
 
-            return avatarRepository.save(avatar);
-
-        } catch (IOException e) {
-            throw new RuntimeException("Falha ao processar e salvar a imagem de perfil do usuário");
+        } catch (IOException ex) {
+            throw new FileReadException(fileName, ex);
         }
+
+        UserAvatar avatar = ImageMapper.toUserAvatar(fileName, fileType, fileSize, bytes);
+        return avatarRepository.save(avatar);
     }
 
     public UserAvatar updateUserAvatar(UserAvatar avatar, MultipartFile image) {
@@ -50,8 +55,8 @@ public class UserAvatarService {
 
             return avatarRepository.save(avatar);
 
-        } catch (Exception e) {
-            throw new RuntimeException("Erro ao atualizar imagem de perfil!");
+        } catch (IOException ex) {
+            throw new FileReadException(avatar.getFileName(), ex);
         }
     }
 }
