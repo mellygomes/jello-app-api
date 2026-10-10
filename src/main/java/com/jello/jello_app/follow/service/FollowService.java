@@ -1,6 +1,10 @@
 package com.jello.jello_app.follow.service;
 
 import com.jello.jello_app.auth.service.AuthService;
+import com.jello.jello_app.follow.exception.FollowAlreadyFollowedException;
+import com.jello.jello_app.follow.exception.SelfFollowException;
+import com.jello.jello_app.follow.exception.SelfUnfollowException;
+import com.jello.jello_app.follow.exception.UnfollowNotFollowedException;
 import com.jello.jello_app.follow.model.Follow;
 import com.jello.jello_app.follow.repository.FollowRepository;
 import com.jello.jello_app.user.model.User;
@@ -25,11 +29,11 @@ public class FollowService {
         User following = userService.getUserById(userId);
 
         if (follower.getId().equals(userId)) {
-            throw new RuntimeException("Você não pode seguir a si mesmo!");
+            throw new SelfFollowException(userId);
         }
 
         if (followRepository.existsByFollowerAndFollowing(follower, following)) {
-            throw new RuntimeException("Você já segue esse usuário!");
+            throw new FollowAlreadyFollowedException(following.getId());
         }
 
         Follow follow = new Follow();
@@ -46,11 +50,11 @@ public class FollowService {
         User following = userService.getUserById(userId);
 
         if (follower.getId().equals(userId)) {
-            throw new RuntimeException("Você não pode deixar de seguir a si mesmo.");
+            throw new SelfUnfollowException(userId);
         }
 
         Follow follow = followRepository.findByFollowerAndFollowing(follower, following)
-                .orElseThrow(() -> new RuntimeException("Você não segue esse usuário"));
+                .orElseThrow(() -> new UnfollowNotFollowedException(following.getId()));
 
         followRepository.delete(follow);
     }
