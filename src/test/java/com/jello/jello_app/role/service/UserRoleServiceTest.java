@@ -1,8 +1,12 @@
 package com.jello.jello_app.role.service;
 
 import com.jello.jello_app.enumeration.RoleType;
+import com.jello.jello_app.role.exception.RoleNotFoundException;
+import com.jello.jello_app.role.exception.UserAlreadyHasModeratorException;
+import com.jello.jello_app.role.exception.UserDoesNotHaveRoleException;
 import com.jello.jello_app.role.model.Role;
 import com.jello.jello_app.role.repository.RoleRepository;
+import com.jello.jello_app.user.exception.UserNotFoundException;
 import com.jello.jello_app.user.model.User;
 import com.jello.jello_app.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -28,6 +32,20 @@ class UserRoleServiceTest {
 
     @InjectMocks
     private UserRoleService userRoleService;
+
+    @Test
+    void shouldThrowExceptionWhenRoleNotFound() {
+        String role = "ROLE_INEXISTENTE";
+        when(roleRepository.findByName(role)).thenThrow(new RoleNotFoundException(role));
+
+        RoleNotFoundException exception = assertThrows(
+                RoleNotFoundException.class,
+                () -> userRoleService.getRoleByName(role)
+        );
+
+        assertTrue(exception.getMessage().contains("Cargo não encontrado: ROLE_INEXISTENTE"));
+        verify(roleRepository).findByName(anyString());
+    }
 
     // Testa a permissao de moderador dada ao usuario
     @Test
@@ -68,13 +86,39 @@ class UserRoleServiceTest {
         when(roleRepository.findByName(RoleType.ROLE_MODERATOR.getName())).thenReturn(Optional.of(moderatorRole));
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> userRoleService.grantModerator(1L));
+        UserNotFoundException exception = assertThrows(
+                UserNotFoundException.class,
+                () -> userRoleService.grantModerator(1L)
+        );
 
-        assertEquals("Usuário não encontrado!", exception.getMessage());
+        assertEquals("Usuário não encontrado: ID 1", exception.getMessage());
 
         verify(roleRepository, times(1)).findByName(any(String.class));
         verify(userRepository, times(1)).findById(any(Long.class));
         verify(userRepository, times(0)).save(any(User.class));
+    }
+
+    @Test
+    void shouldNotGrantRoleWhenUserAlreadyIsModerator() {
+        Role moderatorRole = createRole(RoleType.ROLE_MODERATOR.getName());
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("username fake");
+        user.setRoles(new HashSet<>(Set.of(moderatorRole)));
+
+        when(roleRepository.findByName(RoleType.ROLE_MODERATOR.getName())).thenReturn(Optional.of(moderatorRole));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        UserAlreadyHasModeratorException exception = assertThrows(
+                UserAlreadyHasModeratorException.class,
+                () -> userRoleService.grantModerator(1L)
+        );
+
+        assertTrue(exception.getMessage().contains("O usuário username fake já possui cargo de moderador."));
+
+        verify(roleRepository).findByName(anyString());
+        verify(userRepository).findById(anyLong());
+        verify(userRepository, times(0)).save(any());
     }
 
     // Testa a remocao da permissao de moderador
@@ -114,9 +158,12 @@ class UserRoleServiceTest {
         when(roleRepository.findByName(RoleType.ROLE_MODERATOR.getName())).thenReturn(Optional.of(moderatorRole));
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> userRoleService.revokeModerator(1L));
+        UserNotFoundException exception = assertThrows(
+                UserNotFoundException.class,
+                () -> userRoleService.revokeModerator(1L)
+        );
 
-        assertEquals("Usuário não encontrado", exception.getMessage());
+        assertEquals("Usuário não encontrado: ID 1", exception.getMessage());
 
         verify(roleRepository, times(1)).findByName(any(String.class));
         verify(userRepository, times(1)).findById(any(Long.class));
@@ -125,7 +172,7 @@ class UserRoleServiceTest {
 
     // Testa a remocao de permissao de moderador quando usuario ja nao possui ela
     @Test
-    void shouldNotRevokeModeratorWhenUserDoesNotHaveModeratorRole() {
+    void shouldFailToRevokeWhenUserIsNotModerator() {
         Role moderatorRole = createRole(RoleType.ROLE_MODERATOR.getName());
         Role userRole = createRole(RoleType.ROLE_USER.getName());
 
@@ -136,9 +183,15 @@ class UserRoleServiceTest {
         when(roleRepository.findByName(RoleType.ROLE_MODERATOR.getName())).thenReturn(Optional.of(moderatorRole));
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> userRoleService.revokeModerator(1L));
+        UserDoesNotHaveRoleException exception = assertThrows(
+                UserDoesNotHaveRoleException.class,
+                () -> userRoleService.revokeModerator(1L)
+        );
 
-        assertEquals("Usuário nao possui o cargo de MODERADOR!", exception.getMessage());
+        assertEquals(
+                "O usuário com ID 1 não possui o cargo ROLE_MODERATOR que foi solicitado para remoção.",
+                exception.getMessage()
+        );
 
         verify(roleRepository, times(1)).findByName(anyString());
         verify(userRepository, times(1)).findById(anyLong());
