@@ -1,6 +1,8 @@
 package com.jello.jello_app.image.service;
 
 import com.jello.jello_app.image.dto.ImageDTO;
+import com.jello.jello_app.image.exception.FileReadException;
+import com.jello.jello_app.image.exception.PostImageNotFoundException;
 import com.jello.jello_app.image.model.PostImage;
 import com.jello.jello_app.image.repository.PostImageRepository;
 import com.jello.jello_app.post.model.Post;
@@ -63,7 +65,7 @@ class PostImageServiceTest {
 
         assertNotNull(result);
         assertEquals(2, result.size());
-        assertEquals("foto-um.png", result.get(0).getFileName());
+        assertEquals("foto-um.png", result.getFirst().getFileName());
 
         verify(imageRepository, times(2)).save(any(PostImage.class));
     }
@@ -79,12 +81,12 @@ class PostImageServiceTest {
 
         List<MultipartFile> files = List.of(corruptFile);
 
-        RuntimeException exception = assertThrows(
-                RuntimeException.class,
+        FileReadException exception = assertThrows(
+                FileReadException.class,
                 () -> postImageService.saveImageForPost(files, post)
         );
 
-        assertTrue(exception.getMessage().contains("Erro ao processar a imagem: corrompido-mesmo.png"));
+        assertTrue(exception.getMessage().contains("Falha ao ler o arquivo: corrompido-mesmo.png"));
         verify(imageRepository, never()).save(any());
     }
 
@@ -110,9 +112,12 @@ class PostImageServiceTest {
     void shouldThrowExceptionToGetImageWhenInvalidId() {
         when(imageRepository.findById(1L)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> postImageService.getImageById(1L));
+        PostImageNotFoundException exception = assertThrows(
+                PostImageNotFoundException.class,
+                () -> postImageService.getImageById(1L)
+        );
 
-        assertEquals("Imagem não encontrada!", exception.getMessage());
+        assertEquals("Imagem de post com ID 1 não encontrada.", exception.getMessage());
 
         verify(imageRepository, times(1)).findById(anyLong());
     }

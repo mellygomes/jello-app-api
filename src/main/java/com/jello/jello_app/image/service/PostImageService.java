@@ -1,6 +1,8 @@
 package com.jello.jello_app.image.service;
 
 import com.jello.jello_app.image.dto.ImageDTO;
+import com.jello.jello_app.image.exception.FileReadException;
+import com.jello.jello_app.image.exception.PostImageNotFoundException;
 import com.jello.jello_app.image.mapper.ImageMapper;
 import com.jello.jello_app.image.model.PostImage;
 import com.jello.jello_app.image.repository.PostImageRepository;
@@ -31,8 +33,8 @@ public class PostImageService {
                 ImageDTO imageDTO = ImageMapper.toDto(savedImage);
 
                 savedImagesDTO.add(imageDTO);
-            } catch (IOException e) {
-                throw new RuntimeException("Erro ao processar a imagem: " + file.getOriginalFilename(), e);
+            } catch (IOException ex) {
+                throw new FileReadException(file.getOriginalFilename(), ex);
             }
         }
 
@@ -41,6 +43,6 @@ public class PostImageService {
 
     public PostImage getImageById(Long imageId) {
         return imageRepository.findById(imageId)
-                .orElseThrow(() -> new RuntimeException("Imagem não encontrada!"));
+                .orElseThrow(() -> new PostImageNotFoundException(imageId));
     }
 }
