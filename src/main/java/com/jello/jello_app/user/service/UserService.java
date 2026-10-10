@@ -11,11 +11,15 @@ import com.jello.jello_app.follow.dto.FollowStats;
 import com.jello.jello_app.follow.repository.FollowRepository;
 import com.jello.jello_app.image.service.UserAvatarService;
 import com.jello.jello_app.image.service.UserCoverService;
+import com.jello.jello_app.post.repository.PostRepository;
 import com.jello.jello_app.post.service.PostService;
 import com.jello.jello_app.role.model.Role;
 import com.jello.jello_app.role.repository.RoleRepository;
+import com.jello.jello_app.role.service.UserRoleService;
 import com.jello.jello_app.user.dto.ProfileDTO;
 import com.jello.jello_app.user.dto.UpdateUserRequest;
+import com.jello.jello_app.user.exception.UserAlreadyExistsException;
+import com.jello.jello_app.user.exception.UserNotFoundException;
 import com.jello.jello_app.user.mapper.UserMapper;
 import com.jello.jello_app.user.model.User;
 import com.jello.jello_app.user.repository.UserRepository;
@@ -35,19 +39,18 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final RoleRepository roleRepository;
+    private final UserRoleService userRoleService;
     private final ApplicationEventPublisher publisher;
     private final ConfirmationRepository confirmationRepository;
     private final UserAvatarService userAvatarService;
-    private final PostService postService;
+    private final PostRepository postRepository;
     private final FollowRepository followRepository;
     private final UserCoverService userCoverService;
 
     public User register(RegisterRequest request) {
-        Role roleUser = roleRepository.findByName(RoleType.ROLE_USER.getName())
-                .orElseThrow(() -> new RuntimeException("Tipo de usuario não encontrado! (ROLE_USER)"));
+        Role roleUser = userRoleService.getRoleByName(RoleType.ROLE_USER.getName());
+        User user = createUser(roleUser, request);
         try {
-            User user = createUser(roleUser, request);
             user.setProfileCover(userCoverService.createUserCover());
             user.setProfilePicture(userAvatarService.createUserAvatar());
             User savedUser = userRepository.save(user);
@@ -63,19 +66,19 @@ public class UserService {
             publisher.publishEvent(new UserEvent(savedUser, EventType.REGISTRATION, Map.of("key", confirmation.getConfirmationKey())));
 
             return savedUser;
-        } catch (DataIntegrityViolationException e) {
-            throw new RuntimeException(e.getMessage());
+        } catch (DataIntegrityViolationException ex) {
+            throw new UserAlreadyExistsException(user.getUsername(), user.getEmail());
         }
     }
 
     public User getUserById(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado!"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
     }
 
     public ProfileDTO getUserProfile(Long userId) {
         User user = getUserById(userId);
-        long postsCount = postService.getCountPostsByUserId(userId);
+        long postsCount = postRepository.countByUserId(userId);
         FollowStats followStats = FollowStats.builder()
                 .followersCount(followRepository.countByFollowingId(userId))
                 .followingCount(followRepository.countByFollowerId(userId))
@@ -100,9 +103,9 @@ public class UserService {
                     }
                     return existingUser;
                 })
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado!"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
-        long postsCount = postService.getCountPostsByUserId(userId);
+        long postsCount = postRepository.countByUserId(userId);
         FollowStats followStats = FollowStats.builder()
                 .followersCount(followRepository.countByFollowingId(userId))
                 .followingCount(followRepository.countByFollowerId(userId))
@@ -116,7 +119,7 @@ public class UserService {
     public void deleteUser(Long userId) {
         userRepository.findById(userId)
                 .ifPresentOrElse(userRepository::delete, () -> {
-                    throw new RuntimeException("Usuário não encontrado!");
+                    throw new UserNotFoundException(userId);
                 });
     }
 

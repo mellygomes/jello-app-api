@@ -10,11 +10,15 @@ import com.jello.jello_app.image.model.UserAvatar;
 import com.jello.jello_app.image.model.UserCover;
 import com.jello.jello_app.image.service.UserAvatarService;
 import com.jello.jello_app.image.service.UserCoverService;
-import com.jello.jello_app.post.service.PostService;
+import com.jello.jello_app.post.repository.PostRepository;
+import com.jello.jello_app.role.exception.RoleNotFoundException;
 import com.jello.jello_app.role.model.Role;
 import com.jello.jello_app.role.repository.RoleRepository;
+import com.jello.jello_app.role.service.UserRoleService;
 import com.jello.jello_app.user.dto.ProfileDTO;
 import com.jello.jello_app.user.dto.UpdateUserRequest;
+import com.jello.jello_app.user.exception.UserAlreadyExistsException;
+import com.jello.jello_app.user.exception.UserNotFoundException;
 import com.jello.jello_app.user.model.User;
 import com.jello.jello_app.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -24,7 +28,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -49,16 +55,16 @@ class UserServiceTest {
     private ApplicationEventPublisher applicationEventPublisher;
 
     @Mock
-    private RoleRepository roleRepository;
-
-    @Mock
     private UserCoverService coverService;
 
     @Mock
     private UserAvatarService avatarService;
 
     @Mock
-    private PostService postService;
+    private PostRepository postRepository;
+
+    @Mock
+    private UserRoleService userRoleService;
 
     @Mock
     private FollowRepository followRepository;
@@ -72,7 +78,7 @@ class UserServiceTest {
         Role role = createRole();
         RegisterRequest registerRequest = createRegisterRequest();
 
-        when(roleRepository.findByName(RoleType.ROLE_USER.getName())).thenReturn(Optional.of(role));
+        when(userRoleService.getRoleByName(RoleType.ROLE_USER.getName())).thenReturn(role);
         when(passwordEncoder.encode(registerRequest.getPassword())).thenReturn("criptografada");
 
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
@@ -90,6 +96,8 @@ class UserServiceTest {
         assertEquals("superEmail@mail.com", savedUser.getEmail());
         assertEquals("nickname", savedUser.getUsername());
 
+        verify(userRoleService, times(1)).getRoleByName(anyString());
+        verify(passwordEncoder, times(1)).encode(any());
         verify(userRepository, times(1)).save(any(User.class));
         verify(confirmationRepository, times(1)).save(any(Confirmation.class));
         verify(applicationEventPublisher, times(1)).publishEvent(any(UserEvent.class));
@@ -99,15 +107,18 @@ class UserServiceTest {
     @Test
     void shouldThrowExceptionWhenRoleNotFound() {
         RegisterRequest request = createRegisterRequest();
-        when(roleRepository.findByName(any(String.class))).thenReturn(Optional.empty());
+        when(userRoleService.getRoleByName(any(String.class))).thenThrow(new RoleNotFoundException("ROLE_IMAGINARIO"));
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> userService.register(request));
+        RoleNotFoundException exception = assertThrows(
+                RoleNotFoundException.class,
+                () -> userService.register(request)
+        );
 
         verify(userRepository, never()).save(any(User.class));
         verify(confirmationRepository, never()).save(any(Confirmation.class));
         verify(applicationEventPublisher, never()).publishEvent(any(UserEvent.class));
 
-        assertEquals("Tipo de usuario não encontrado! (ROLE_USER)", exception.getMessage());
+        assertEquals("Cargo não encontrado: ROLE_IMAGINARIO", exception.getMessage());
     }
 
     // Criacao de usuario falha quando tenta criar um usuario com dados ja existentes
@@ -122,17 +133,23 @@ class UserServiceTest {
         UserAvatar avatar = new UserAvatar();
         avatar.setFileName("Super avatar teste");
 
-        when(roleRepository.findByName(RoleType.ROLE_USER.getName())).thenReturn(Optional.of(role));
+        when(userRoleService.getRoleByName(RoleType.ROLE_USER.getName())).thenReturn(role);
         when(passwordEncoder.encode(registerRequest.getPassword())).thenReturn("Cripto");
         when(coverService.createUserCover()).thenReturn(cover);
         when(avatarService.createUserAvatar()).thenReturn(avatar);
         when(userRepository.save(any(User.class))).thenThrow(new DataIntegrityViolationException("Email já cadastrado"));
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> userService.register(registerRequest));
+        UserAlreadyExistsException exception = assertThrows(
+                UserAlreadyExistsException.class,
+                () -> userService.register(registerRequest)
+        );
 
-        assertEquals("Email já cadastrado", exception.getMessage());
+        assertTrue(
+                exception.getMessage()
+                        .contains("Já existe um registro com o valor informado para o usuário: nickname ou e-mail: superEmail@mail.com")
+        );
 
-        verify(roleRepository, times(1)).findByName(any());
+        verify(userRoleService, times(1)).getRoleByName(anyString());
         verify(passwordEncoder, times(1)).encode(any());
         verify(coverService, times(1)).createUserCover();
         verify(avatarService, times(1)).createUserAvatar();
@@ -164,9 +181,12 @@ class UserServiceTest {
 
         when(userRepository.findById(id)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> userService.getUserById(id));
+        UserNotFoundException exception = assertThrows(
+                UserNotFoundException.class,
+                () -> userService.getUserById(id)
+        );
 
-        assertEquals("Usuário não encontrado!", exception.getMessage());
+        assertEquals("Usuário não encontrado: ID 1", exception.getMessage());
 
         verify(userRepository, times(1)).findById(anyLong());
     }
@@ -182,7 +202,7 @@ class UserServiceTest {
         user.setId(id);
 
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
-        when(postService.getCountPostsByUserId(id)).thenReturn(posts);
+        when(postRepository.countByUserId(id)).thenReturn(posts);
         when(followRepository.countByFollowerId(id)).thenReturn(followers);
         when(followRepository.countByFollowingId(id)).thenReturn(followings);
 
@@ -193,7 +213,7 @@ class UserServiceTest {
         assertEquals(posts, profile.getPosts());
 
         verify(userRepository, times(1)).findById(any(Long.class));
-        verify(postService, times(1)).getCountPostsByUserId(any(Long.class));
+        verify(postRepository, times(1)).countByUserId(any(Long.class));
         verify(followRepository, times(1)).countByFollowingId(any(Long.class));
         verify(followRepository, times(1)).countByFollowerId(any(Long.class));
     }
@@ -205,12 +225,15 @@ class UserServiceTest {
 
         when(userRepository.findById(id)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> userService.getUserProfile(id));
+        UserNotFoundException exception = assertThrows(
+                UserNotFoundException.class,
+                () -> userService.getUserProfile(id)
+        );
 
-        assertEquals("Usuário não encontrado!", exception.getMessage());
+        assertEquals("Usuário não encontrado: ID 1", exception.getMessage());
 
         verify(userRepository, times(1)).findById(anyLong());
-        verify(postService, never()).getCountPostsByUserId(anyLong());
+        verify(postRepository, never()).countByUserId(anyLong());
     }
 
     // Delete de usuário quando existe
@@ -232,9 +255,12 @@ class UserServiceTest {
 
         when(userRepository.findById(id)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> userService.deleteUser(id));
+        UserNotFoundException exception = assertThrows(
+                UserNotFoundException.class,
+                () -> userService.deleteUser(id)
+        );
 
-        assertEquals("Usuário não encontrado!", exception.getMessage());
+        assertEquals("Usuário não encontrado: ID 1", exception.getMessage());
         verify(userRepository, never()).delete(any(User.class));
     }
 
@@ -252,7 +278,7 @@ class UserServiceTest {
         user.setId(id);
 
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
-        when(postService.getCountPostsByUserId(1L)).thenReturn(posts);
+        when(postRepository.countByUserId(1L)).thenReturn(posts);
         when(followRepository.countByFollowerId(id)).thenReturn(followings);
         when(followRepository.countByFollowingId(id)).thenReturn(followers);
         when(userRepository.save(user)).thenReturn(user);
@@ -263,7 +289,7 @@ class UserServiceTest {
 
         verify(userRepository, times(1)).findById(anyLong());
         verify(userRepository, times(1)).save(any(User.class));
-        verify(postService, times(1)).getCountPostsByUserId(anyLong());
+        verify(postRepository, times(1)).countByUserId(anyLong());
         verify(followRepository, times(1)).countByFollowerId(anyLong());
         verify(followRepository, times(1)).countByFollowingId(anyLong());
     }
@@ -276,9 +302,12 @@ class UserServiceTest {
 
         when(userRepository.findById(id)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> userService.updateUser(request, id));
+        UserNotFoundException exception = assertThrows(
+                UserNotFoundException.class,
+                () -> userService.updateUser(request, id)
+        );
 
-        assertEquals("Usuário não encontrado!", exception.getMessage());
+        assertEquals("Usuário não encontrado: ID 1", exception.getMessage());
         verify(userRepository, never()).save(any(User.class));
     }
 
@@ -307,7 +336,20 @@ class UserServiceTest {
         updateRequest.setFirstName("super mega nome");
         updateRequest.setLastName("super sobrenome");
         updateRequest.setBio("biografia insana");
-//        updateRequest.setPassword("novaSenhaMesmo");
+        MultipartFile avatar = new MockMultipartFile(
+                "avatarFile",
+                "avatar.png",
+                "image/png",
+                "conteudo mesmo".getBytes()
+        );
+        MultipartFile cover = new MockMultipartFile(
+                "coverFile",
+                "cover.png",
+                "image/png",
+                "conteudo mesmo".getBytes()
+        );
+        updateRequest.setAvatar(avatar);
+        updateRequest.setCover(cover);
 
         return updateRequest;
     }
