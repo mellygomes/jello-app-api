@@ -1,7 +1,11 @@
 package com.jello.jello_app.security.jwt;
 
+import com.jello.jello_app.auth.exception.ExpiredTokenException;
+import com.jello.jello_app.auth.exception.InvalidTokenException;
 import com.jello.jello_app.security.user.AppUserDetails;
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.Cookie;
@@ -63,8 +67,10 @@ public class JwtUtils {
                     .build()
                     .parseSignedClaims(token);
             return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            return false;
+        } catch (ExpiredJwtException ex) {
+            throw new ExpiredTokenException(ex);
+        } catch (JwtException | IllegalArgumentException ex) {
+            throw new InvalidTokenException("Token inválido", ex);
         }
     }
 

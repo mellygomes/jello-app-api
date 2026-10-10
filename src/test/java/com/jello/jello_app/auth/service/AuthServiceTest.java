@@ -1,11 +1,13 @@
 package com.jello.jello_app.auth.service;
 
 import com.jello.jello_app.auth.dto.LoginRequest;
+import com.jello.jello_app.confirmation.exception.ConfirmationNotFoundException;
 import com.jello.jello_app.confirmation.model.Confirmation;
-import com.jello.jello_app.confirmation.repository.ConfirmationRepository;
+import com.jello.jello_app.confirmation.service.ConfirmationService;
 import com.jello.jello_app.security.user.AppUserDetails;
 import com.jello.jello_app.user.model.User;
 import com.jello.jello_app.user.repository.UserRepository;
+import com.jello.jello_app.user.service.UserService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,8 +21,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -36,7 +36,10 @@ class AuthServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private ConfirmationRepository confirmationRepository;
+    private UserService userService;
+
+    @Mock
+    private ConfirmationService confirmationService;
 
     @InjectMocks
     private AuthService authService;
@@ -54,21 +57,23 @@ class AuthServiceTest {
     @Test
     void shouldLogin() {
         Authentication authentication = mock(Authentication.class);
-        AppUserDetails userDetails = mock(AppUserDetails.class);
+
+        AppUserDetails userDetails = new AppUserDetails();
+        userDetails.setId(1L);
+        userDetails.setUsername("nick");
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))
         ).thenReturn(authentication);
 
         when(authentication.getPrincipal()).thenReturn(userDetails);
-        when(userDetails.getUsername()).thenReturn("nick");
-        when(userRepository.findByUsername("nick")).thenReturn(user);
+        when(userService.getUserById(1L)).thenReturn(user);
         when(userRepository.save(any(User.class))).thenReturn(user);
 
         Authentication result = authService.login(loginRequest);
 
         assertNotNull(result);
         verify(authenticationManager, times(1)).authenticate(any());
-        verify(userRepository, times(1)).findByUsername(anyString());
+        verify(userService, times(1)).getUserById(anyLong());
         verify(userRepository, times(1)).save(any());
     }
 
@@ -110,13 +115,14 @@ class AuthServiceTest {
 
     // Teste de autenticacao de usuario falha
     @Test
-    void shouldFailWhenUserIsNotAuthenticated() {
+    void shouldNotReturnUserWhenIsNotAuthenticated() {
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         SecurityContextHolder.setContext(context);
 
-        assertThrows(NullPointerException.class, () -> authService.getAuthenticatedUser());
+        User user = authService.getAuthenticatedUser();
 
-        verifyNoInteractions(userRepository);
+        assertNull(user);
+        verify(userRepository).findByUsername(anyString());
     }
 
     // Teste de chave de verificacao de conta
@@ -129,31 +135,33 @@ class AuthServiceTest {
         confirmation.setConfirmationKey(token);
         confirmation.setUser(user);
 
-        when(confirmationRepository.findByConfirmationKey(token)).thenReturn(Optional.of(confirmation));
-        when(userRepository.findByEmail(confirmation.getUser().getEmail())).thenReturn(user);
+        when(confirmationService.getConfirmationByKey(token)).thenReturn(confirmation);
+        when(userService.getUserById(confirmation.getUser().getId())).thenReturn(user);
         when(userRepository.save(any(User.class))).thenReturn(user);
 
         authService.verifyAccountKey(token);
 
-        verify(confirmationRepository, times(1)).findByConfirmationKey(anyString());
-        verify(userRepository, times(1)).findByEmail(anyString());
+        verify(confirmationService, times(1)).getConfirmationByKey(anyString());
+        verify(userService, times(1)).getUserById(anyLong());
         verify(userRepository, times(1)).save(any());
-        verify(confirmationRepository, times(1)).delete(any());
+        verify(confirmationService, times(1)).deleteConfirmation(any());
     }
 
     // Teste de chave de verificacao de conta com chave invalida
     @Test
     void shouldFailWhenVerifyAccountKey() {
-        when(confirmationRepository.findByConfirmationKey(anyString()))
-                .thenThrow(new RuntimeException("Chave de confirmação não encontrada!"));
+        when(confirmationService.getConfirmationByKey("chaveInexistenteMesmo"))
+                .thenThrow(new ConfirmationNotFoundException("chaveInexistenteMesmo"));
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> authService.verifyAccountKey("chaveInexistenteMesmo"));
+        ConfirmationNotFoundException exception = assertThrows(ConfirmationNotFoundException.class,
+                () -> authService.verifyAccountKey("chaveInexistenteMesmo"));
 
-        assertEquals("Chave de confirmação não encontrada!", exception.getMessage());
+        assertEquals("Chave de confirmação não encontrada: chaveInexistenteMesmo", exception.getMessage());
 
-        verify(confirmationRepository, times(1)).findByConfirmationKey(anyString());
+        verify(confirmationService, times(1)).getConfirmationByKey(anyString());
+        verifyNoInteractions(userService);
         verifyNoInteractions(userRepository);
-        verify(confirmationRepository, times(0)).delete(any());
+        verify(confirmationService, times(0)).deleteConfirmation(any());
     }
 
     // Limpa o contexto apos os testes

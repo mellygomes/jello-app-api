@@ -1,5 +1,6 @@
 package com.jello.jello_app.security.jwt;
 
+import com.jello.jello_app.auth.exception.InvalidTokenException;
 import com.jello.jello_app.domain.RequestContext;
 import com.jello.jello_app.security.user.AppUserDetailsService;
 import jakarta.servlet.FilterChain;
@@ -36,8 +37,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 RequestContext.setUserId(userId);
             }
-        } catch (Exception e) {
-            logger.error("Não foi possível definir a autenticação do usuário: {}", e);
+        } catch (InvalidTokenException ex) {
+            logger.debug("Não foi possível definir a autenticação do usuário: {}", ex);
         }
 
         try {

@@ -3,6 +3,7 @@ package com.jello.jello_app.email.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
@@ -33,9 +34,8 @@ public class EmailService {
             message.setTo(emailTo);
             message.setText(getEmailMessage(name, host, token));
             sender.send(message);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new RuntimeException("Unable to send mail");
+        } catch (MailException ex) {
+            log.error("Falha ao enviar e-mail de confirmação", ex);
         }
     }
 
@@ -48,9 +48,8 @@ public class EmailService {
             message.setTo(emailTo);
             message.setText(getResetPasswordMessage(name, host, token));
             sender.send(message);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new RuntimeException("Unable to send mail");
+        } catch (MailException ex) {
+            log.error("Falha ao enviar e-mail de recuperação de senha", ex);
         }
     }
 }
