@@ -7,6 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class JwtAuthenticationResponse {
+public class JwtAuthenticationResponseDTO {
     private String token;
 }

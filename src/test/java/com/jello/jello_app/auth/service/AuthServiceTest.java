@@ -1,6 +1,6 @@
 package com.jello.jello_app.auth.service;
 
-import com.jello.jello_app.auth.dto.LoginRequest;
+import com.jello.jello_app.auth.dto.LoginRequestDTO;
 import com.jello.jello_app.confirmation.exception.ConfirmationNotFoundException;
 import com.jello.jello_app.confirmation.model.Confirmation;
 import com.jello.jello_app.confirmation.service.ConfirmationService;
@@ -44,7 +44,7 @@ class AuthServiceTest {
     @InjectMocks
     private AuthService authService;
 
-    private LoginRequest loginRequest;
+    private LoginRequestDTO loginRequest;
     private User user;
 
     @BeforeEach
@@ -170,8 +170,8 @@ class AuthServiceTest {
         SecurityContextHolder.clearContext();
     }
 
-    private LoginRequest createLoginRequest() {
-        LoginRequest request = new LoginRequest();
+    private LoginRequestDTO createLoginRequest() {
+        LoginRequestDTO request = new LoginRequestDTO();
         request.setUsername("nick");
         request.setPassword("123");
 

@@ -1,7 +1,7 @@
 package com.jello.jello_app.auth.controller;
 
-import com.jello.jello_app.auth.dto.LoginRequest;
-import com.jello.jello_app.auth.dto.RegisterRequest;
+import com.jello.jello_app.auth.dto.LoginRequestDTO;
+import com.jello.jello_app.auth.dto.RegisterRequestDTO;
 import com.jello.jello_app.auth.dto.UserResponseDTO;
 import com.jello.jello_app.auth.service.AuthService;
 import com.jello.jello_app.security.jwt.JwtUtils;
@@ -30,7 +30,7 @@ public class AuthController {
     private final JwtUtils jwtUtils;
 
     @PostMapping("/login")
-    public ResponseEntity<Void> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<Void> login(@RequestBody LoginRequestDTO request) {
         Authentication authentication = authService.login(request);
         String jwt = jwtUtils.generateTokenForUser(authentication);
         ResponseCookie cookie = buildResponseCookie(jwt, Duration.ofHours(1));
@@ -39,7 +39,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public UserDTO register(@RequestBody RegisterRequest request) {
+    public UserDTO register(@RequestBody RegisterRequestDTO request) {
         User user = userService.register(request);
         return UserMapper.toDto(user);
     }

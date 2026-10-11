@@ -8,7 +8,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class FollowStats {
+public class FollowStatsDTO {
     private long followersCount;
     private long followingCount;
 }

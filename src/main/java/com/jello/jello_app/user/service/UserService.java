@@ -1,23 +1,21 @@
 package com.jello.jello_app.user.service;
 
-import com.jello.jello_app.auth.dto.RegisterRequest;
+import com.jello.jello_app.auth.dto.RegisterRequestDTO;
 import com.jello.jello_app.confirmation.model.Confirmation;
 import com.jello.jello_app.confirmation.repository.ConfirmationRepository;
 import com.jello.jello_app.domain.RequestContext;
 import com.jello.jello_app.enumeration.EventType;
 import com.jello.jello_app.enumeration.RoleType;
 import com.jello.jello_app.event.UserEvent;
-import com.jello.jello_app.follow.dto.FollowStats;
+import com.jello.jello_app.follow.dto.FollowStatsDTO;
 import com.jello.jello_app.follow.repository.FollowRepository;
 import com.jello.jello_app.image.service.UserAvatarService;
 import com.jello.jello_app.image.service.UserCoverService;
 import com.jello.jello_app.post.repository.PostRepository;
-import com.jello.jello_app.post.service.PostService;
 import com.jello.jello_app.role.model.Role;
-import com.jello.jello_app.role.repository.RoleRepository;
 import com.jello.jello_app.role.service.UserRoleService;
 import com.jello.jello_app.user.dto.ProfileDTO;
-import com.jello.jello_app.user.dto.UpdateUserRequest;
+import com.jello.jello_app.user.dto.UpdateUserRequestDTO;
 import com.jello.jello_app.user.exception.UserAlreadyExistsException;
 import com.jello.jello_app.user.exception.UserNotFoundException;
 import com.jello.jello_app.user.mapper.UserMapper;
@@ -47,7 +45,7 @@ public class UserService {
     private final FollowRepository followRepository;
     private final UserCoverService userCoverService;
 
-    public User register(RegisterRequest request) {
+    public User register(RegisterRequestDTO request) {
         Role roleUser = userRoleService.getRoleByName(RoleType.ROLE_USER.getName());
         User user = createUser(roleUser, request);
         try {
@@ -79,7 +77,7 @@ public class UserService {
     public ProfileDTO getUserProfile(Long userId) {
         User user = getUserById(userId);
         long postsCount = postRepository.countByUserId(userId);
-        FollowStats followStats = FollowStats.builder()
+        FollowStatsDTO followStats = FollowStatsDTO.builder()
                 .followersCount(followRepository.countByFollowingId(userId))
                 .followingCount(followRepository.countByFollowerId(userId))
                 .build();
@@ -87,7 +85,7 @@ public class UserService {
         return UserMapper.toProfileDto(user, postsCount, followStats);
     }
 
-    public ProfileDTO updateUser(UpdateUserRequest request, Long userId) {
+    public ProfileDTO updateUser(UpdateUserRequestDTO request, Long userId) {
         User user = userRepository.findById(userId)
                 .map(existingUser -> {
                     existingUser.setFirstName(request.getFirstName());
@@ -106,7 +104,7 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
         long postsCount = postRepository.countByUserId(userId);
-        FollowStats followStats = FollowStats.builder()
+        FollowStatsDTO followStats = FollowStatsDTO.builder()
                 .followersCount(followRepository.countByFollowingId(userId))
                 .followingCount(followRepository.countByFollowerId(userId))
                 .build();
@@ -123,7 +121,7 @@ public class UserService {
                 });
     }
 
-    private User createUser(Role roleUser, RegisterRequest request) {
+    private User createUser(Role roleUser, RegisterRequestDTO request) {
         User user = new User();
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());

@@ -1,6 +1,6 @@
 package com.jello.jello_app.user.service;
 
-import com.jello.jello_app.auth.dto.RegisterRequest;
+import com.jello.jello_app.auth.dto.RegisterRequestDTO;
 import com.jello.jello_app.confirmation.model.Confirmation;
 import com.jello.jello_app.confirmation.repository.ConfirmationRepository;
 import com.jello.jello_app.enumeration.RoleType;
@@ -13,10 +13,9 @@ import com.jello.jello_app.image.service.UserCoverService;
 import com.jello.jello_app.post.repository.PostRepository;
 import com.jello.jello_app.role.exception.RoleNotFoundException;
 import com.jello.jello_app.role.model.Role;
-import com.jello.jello_app.role.repository.RoleRepository;
 import com.jello.jello_app.role.service.UserRoleService;
 import com.jello.jello_app.user.dto.ProfileDTO;
-import com.jello.jello_app.user.dto.UpdateUserRequest;
+import com.jello.jello_app.user.dto.UpdateUserRequestDTO;
 import com.jello.jello_app.user.exception.UserAlreadyExistsException;
 import com.jello.jello_app.user.exception.UserNotFoundException;
 import com.jello.jello_app.user.model.User;
@@ -76,7 +75,7 @@ class UserServiceTest {
     @Test
     void shouldRegisterUser() {
         Role role = createRole();
-        RegisterRequest registerRequest = createRegisterRequest();
+        RegisterRequestDTO registerRequest = createRegisterRequest();
 
         when(userRoleService.getRoleByName(RoleType.ROLE_USER.getName())).thenReturn(role);
         when(passwordEncoder.encode(registerRequest.getPassword())).thenReturn("criptografada");
@@ -106,7 +105,7 @@ class UserServiceTest {
     // Criacao falha de usuario quando role nao encontrado
     @Test
     void shouldThrowExceptionWhenRoleNotFound() {
-        RegisterRequest request = createRegisterRequest();
+        RegisterRequestDTO request = createRegisterRequest();
         when(userRoleService.getRoleByName(any(String.class))).thenThrow(new RoleNotFoundException("ROLE_IMAGINARIO"));
 
         RoleNotFoundException exception = assertThrows(
@@ -125,7 +124,7 @@ class UserServiceTest {
     @Test
     void shouldThrowExceptionWhenDataIntegrityFails() {
         Role role = createRole();
-        RegisterRequest registerRequest = createRegisterRequest();
+        RegisterRequestDTO registerRequest = createRegisterRequest();
 
         UserCover cover = new UserCover();
         cover.setFileName("Capa de teste");
@@ -267,7 +266,7 @@ class UserServiceTest {
     // Atualizacao de usuario quando existe
     @Test
     void shouldUpdateUser() {
-        UpdateUserRequest updateRequest = createUpdateRequest();
+        UpdateUserRequestDTO updateRequest = createUpdateRequest();
 
         Long id = 1L;
         long posts = 2;
@@ -297,7 +296,7 @@ class UserServiceTest {
     // Atualizacao de usuario quando nao existe
     @Test
     void shouldThrowExceptionWhenUpdateInvalidUser() {
-        UpdateUserRequest request = new UpdateUserRequest();
+        UpdateUserRequestDTO request = new UpdateUserRequestDTO();
         Long id = 1L;
 
         when(userRepository.findById(id)).thenReturn(Optional.empty());
@@ -320,8 +319,8 @@ class UserServiceTest {
         return role;
     }
 
-    private RegisterRequest createRegisterRequest() {
-        RegisterRequest registerRequest = new RegisterRequest();
+    private RegisterRequestDTO createRegisterRequest() {
+        RegisterRequestDTO registerRequest = new RegisterRequestDTO();
         registerRequest.setEmail("superEmail@mail.com");
         registerRequest.setFirstName("nome insano");
         registerRequest.setLastName("sobrenome foda");
@@ -331,8 +330,8 @@ class UserServiceTest {
         return registerRequest;
     }
 
-    private UpdateUserRequest createUpdateRequest() {
-        UpdateUserRequest updateRequest = new UpdateUserRequest();
+    private UpdateUserRequestDTO createUpdateRequest() {
+        UpdateUserRequestDTO updateRequest = new UpdateUserRequestDTO();
         updateRequest.setFirstName("super mega nome");
         updateRequest.setLastName("super sobrenome");
         updateRequest.setBio("biografia insana");

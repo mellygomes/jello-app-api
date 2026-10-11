@@ -2,7 +2,7 @@ package com.jello.jello_app.user.controller;
 
 import com.jello.jello_app.security.user.AppUserDetails;
 import com.jello.jello_app.user.dto.ProfileDTO;
-import com.jello.jello_app.user.dto.UpdateUserRequest;
+import com.jello.jello_app.user.dto.UpdateUserRequestDTO;
 import com.jello.jello_app.user.dto.UserDTO;
 import com.jello.jello_app.user.mapper.UserMapper;
 import com.jello.jello_app.user.model.User;
@@ -36,7 +36,7 @@ public class UserController {
     @PutMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("isAuthenticated()")
     public ProfileDTO updateUser(
-            @ModelAttribute UpdateUserRequest request,
+            @ModelAttribute UpdateUserRequestDTO request,
             @AuthenticationPrincipal AppUserDetails userDetails
     ) {
         return userService.updateUser(request, userDetails.getId());

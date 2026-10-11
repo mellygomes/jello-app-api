@@ -1,6 +1,6 @@
 package com.jello.jello_app.user.mapper;
 
-import com.jello.jello_app.follow.dto.FollowStats;
+import com.jello.jello_app.follow.dto.FollowStatsDTO;
 import com.jello.jello_app.user.dto.ProfileDTO;
 import com.jello.jello_app.user.dto.UserDTO;
 import com.jello.jello_app.user.model.User;
@@ -16,7 +16,7 @@ public class UserMapper {
                 .build();
     }
 
-    public static ProfileDTO toProfileDto(User user, long postsCount, FollowStats followStats) {
+    public static ProfileDTO toProfileDto(User user, long postsCount, FollowStatsDTO followStats) {
         return ProfileDTO.builder()
                 .email(user.getEmail())
                 .username(user.getUsername())

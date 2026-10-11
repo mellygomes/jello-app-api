@@ -1,6 +1,5 @@
 package com.jello.jello_app.follow.repository;
 
-import com.jello.jello_app.follow.dto.FollowStats;
 import com.jello.jello_app.follow.model.Follow;
 import com.jello.jello_app.user.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;

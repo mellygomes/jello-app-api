@@ -1,6 +1,6 @@
 package com.jello.jello_app.auth.service;
 
-import com.jello.jello_app.auth.dto.LoginRequest;
+import com.jello.jello_app.auth.dto.LoginRequestDTO;
 import com.jello.jello_app.confirmation.model.Confirmation;
 import com.jello.jello_app.confirmation.service.ConfirmationService;
 import com.jello.jello_app.security.user.AppUserDetails;
@@ -25,7 +25,7 @@ public class AuthService {
     private final UserService userService;
     private final ConfirmationService confirmationService;
 
-    public Authentication login(LoginRequest request) {
+    public Authentication login(LoginRequestDTO request) {
         Authentication authentication = authenticationManager
                 .authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
