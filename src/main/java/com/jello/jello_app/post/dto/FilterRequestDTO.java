@@ -14,8 +14,8 @@ import java.util.List;
 @NoArgsConstructor
 public class FilterRequestDTO {
     private boolean filterAi;
+    private String search;
     private List<Long> tags;
     private LocalDate initialDate;
     private LocalDate finalDate;
-    private String search;
 }
