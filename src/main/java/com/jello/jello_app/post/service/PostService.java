@@ -73,6 +73,21 @@ public class PostService {
                 });
     }
 
+    @Transactional
+    public void addLike(Long postId) {
+        User user = authService.getAuthenticatedUser();
+
+        Post post = getPostById(postId);
+        post.getLikes().add(user);
+    }
+
+    @Transactional
+    public void removeLike(Long postId, Long userId) {
+        Post post = getPostById(postId);
+
+        post.getLikes().removeIf(u -> u.getId().equals(userId));
+    }
+
     public Post updatePost(UpdatePostRequestDTO request, Long postId) {
         return postRepository.findById(postId)
                 .map(existingPost -> {
@@ -100,6 +115,20 @@ public class PostService {
         Specification<Post> spec = Specification
                 .where(PostSpecification.withFilter(filter))
                 .and(PostSpecification.orderByFollowingUser(followingIds));
+
+        return postRepository.findAll(spec, pageable).map(PostMapper::toDto);
+    }
+
+    public Page<PostResponseDTO> getAllPostsByUser(Long userId, FilterRequestDTO filter, int page, int size) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by("createdAt").descending()
+        );
+
+        Specification<Post> spec = Specification
+                .where(PostSpecification.withFilter(filter))
+                .and(PostSpecification.byUserId(userId));
 
         return postRepository.findAll(spec, pageable).map(PostMapper::toDto);
     }

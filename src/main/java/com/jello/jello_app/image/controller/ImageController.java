@@ -36,6 +36,15 @@ public class ImageController {
                 .body(resource);
     }
 
+    @GetMapping("/{imageId}")
+    public ResponseEntity<Resource> getPostImage(@PathVariable Long imageId) {
+        PostImage image = postImageService.getImageById(imageId);
+        ByteArrayResource resource = new ByteArrayResource(image.getData());
+
+        return ResponseEntity.ok().contentType(MediaType.parseMediaType(image.getFileType()))
+                .body(resource);
+    }
+
     @GetMapping("/avatars/{avatarId}")
     public ResponseEntity<Resource> getProfilePicture(@PathVariable Long avatarId) {
         UserAvatar avatar = avatarService.getAvatarById(avatarId);

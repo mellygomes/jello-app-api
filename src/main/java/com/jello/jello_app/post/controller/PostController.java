@@ -7,11 +7,12 @@ import com.jello.jello_app.post.dto.UpdatePostRequestDTO;
 import com.jello.jello_app.post.mapper.PostMapper;
 import com.jello.jello_app.post.model.Post;
 import com.jello.jello_app.post.service.PostService;
+import com.jello.jello_app.security.user.AppUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import tools.jackson.databind.ObjectMapper;
@@ -47,13 +48,26 @@ public class PostController {
         return PostMapper.toDto(post);
     }
 
+    @PostMapping("/{postId}/likes")
+    public void like(@PathVariable Long postId) {
+        postService.addLike(postId);
+    }
+
+    @DeleteMapping("/{postId}/likes")
+    public void unlike(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal AppUserDetails details
+    ) {
+        postService.removeLike(postId, details.getId());
+    }
+
     @GetMapping("/list")
     public Page<PostResponseDTO> listPosts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @ModelAttribute FilterRequestDTO request
+            @ModelAttribute FilterRequestDTO filter
     ) {
-        return postService.findPosts(request, page, size);
+        return postService.findPosts(filter, page, size);
     }
 
 }

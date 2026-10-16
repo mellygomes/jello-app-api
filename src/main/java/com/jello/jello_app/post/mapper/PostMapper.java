@@ -1,5 +1,6 @@
 package com.jello.jello_app.post.mapper;
 
+import com.jello.jello_app.image.mapper.ImageMapper;
 import com.jello.jello_app.post.dto.PostResponseDTO;
 import com.jello.jello_app.post.model.Post;
 import com.jello.jello_app.tag.mapper.TagMapper;
@@ -12,6 +13,9 @@ public class PostMapper {
                 .title(post.getTitle())
                 .content(post.getContent())
                 .user(UserMapper.toDto(post.getUser()))
+                .likes(post.getLikes().size())
+                .comments(post.getComments().size())
+                .images(post.getImages().stream().map(ImageMapper::toTeste).toList())
                 .tags(post.getTags().stream().map(TagMapper::toDto).toList())
                 .build();
     }

@@ -1,6 +1,7 @@
 package com.jello.jello_app.user.mapper;
 
 import com.jello.jello_app.follow.dto.FollowStatsDTO;
+import com.jello.jello_app.image.mapper.ImageMapper;
 import com.jello.jello_app.user.dto.ProfileDTO;
 import com.jello.jello_app.user.dto.UserDTO;
 import com.jello.jello_app.user.model.User;
@@ -23,8 +24,8 @@ public class UserMapper {
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .bio(user.getBio())
-                .avatar(user.getProfilePicture())
-                .cover(user.getProfileCover())
+                .avatar(ImageMapper.toAvatarDTO(user.getProfilePicture()))
+                .cover(ImageMapper.toCoverDTO(user.getProfileCover()))
                 .followers(followStats.getFollowersCount())
                 .following(followStats.getFollowingCount())
                 .posts(postsCount)
