@@ -1,6 +1,9 @@
 package com.jello.jello_app.image.mapper;
 
+import com.jello.jello_app.image.dto.AvatarDTO;
+import com.jello.jello_app.image.dto.CoverDTO;
 import com.jello.jello_app.image.dto.ImageDTO;
+import com.jello.jello_app.image.dto.ImageResponseDTO;
 import com.jello.jello_app.image.model.PostImage;
 import com.jello.jello_app.image.model.UserAvatar;
 import com.jello.jello_app.image.model.UserCover;
@@ -14,6 +17,13 @@ public class ImageMapper {
         return ImageDTO.builder()
                 .id(image.getId())
                 .fileName(image.getFileName())
+                .build();
+    }
+
+    public static ImageResponseDTO toTeste(PostImage image) {
+        return ImageResponseDTO.builder()
+                .id(image.getId())
+                .url("/api/v1/images/" + image.getId())
                 .build();
     }
 
@@ -42,6 +52,20 @@ public class ImageMapper {
                 .fileType(fileType)
                 .fileSize(fileSize)
                 .data(data)
+                .build();
+    }
+
+    public static AvatarDTO toAvatarDTO(UserAvatar avatar) {
+        return AvatarDTO.builder()
+                .id(avatar.getId())
+                .fileName(avatar.getFileName())
+                .build();
+    }
+
+    public static CoverDTO toCoverDTO(UserCover cover) {
+        return CoverDTO.builder()
+                .id(cover.getId())
+                .fileName(cover.getFileName())
                 .build();
     }
 }
