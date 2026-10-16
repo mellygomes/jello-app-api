@@ -1,5 +1,7 @@
 package com.jello.jello_app.user.dto;
 
+import com.jello.jello_app.image.dto.AvatarDTO;
+import com.jello.jello_app.image.dto.CoverDTO;
 import com.jello.jello_app.image.model.UserAvatar;
 import com.jello.jello_app.image.model.UserCover;
 import lombok.Builder;
@@ -14,8 +16,8 @@ public class ProfileDTO {
     private String email;
     private String username;
     private String bio;
-    private UserAvatar avatar;
-    private UserCover cover;
+    private AvatarDTO avatar;
+    private CoverDTO cover;
     private long posts;
     private long followers;
     private long following;
