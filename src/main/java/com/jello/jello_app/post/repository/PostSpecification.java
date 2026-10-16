@@ -60,4 +60,9 @@ public class PostSpecification {
             return criteriaBuilder.conjunction();
         };
     }
+
+    public static Specification<Post> byUserId(Long userId) {
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("user").get("id"), userId);
+    }
 }
