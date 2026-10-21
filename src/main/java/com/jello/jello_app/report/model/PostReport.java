@@ -18,6 +18,9 @@ import lombok.Setter;
 @Table(name = "tb_report_post")
 public class PostReport extends Auditable {
 
+    @Column(columnDefinition = "TEXT")
+    private String content;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "reported_post_id", nullable = false)
     private Post reportedPost;
