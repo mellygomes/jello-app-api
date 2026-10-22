@@ -197,8 +197,7 @@ class UserServiceTest {
         long posts = 2;
         long followers = 4;
         long followings = 23;
-        User user = new User();
-        user.setId(id);
+        User user = createUser();
 
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
         when(postRepository.countByUserId(id)).thenReturn(posts);
@@ -273,10 +272,17 @@ class UserServiceTest {
         long followers = 3;
         long followings = 4;
 
-        User user = new User();
-        user.setId(id);
+        User user = createUser();
+
+        UserAvatar avatar = new UserAvatar();
+        avatar.setFileName("avatarFile");
+
+        UserCover cover = new UserCover();
+        cover.setFileName("coverFile");
 
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
+        when(avatarService.updateUserAvatar(user.getProfilePicture(), updateRequest.getAvatar())).thenReturn(avatar);
+        when(coverService.updateUserCover(user.getProfileCover(), updateRequest.getCover())).thenReturn(cover);
         when(postRepository.countByUserId(1L)).thenReturn(posts);
         when(followRepository.countByFollowerId(id)).thenReturn(followings);
         when(followRepository.countByFollowingId(id)).thenReturn(followers);
@@ -308,6 +314,26 @@ class UserServiceTest {
 
         assertEquals("Usuário não encontrado: ID 1", exception.getMessage());
         verify(userRepository, never()).save(any(User.class));
+    }
+
+    private User createUser() {
+        UserCover cover = new UserCover();
+        cover.setId(3L);
+        cover.setFileName("Capa do fulano");
+
+        UserAvatar avatar = new UserAvatar();
+        avatar.setId(2L);
+        avatar.setFileName("Super avatar do fulano");
+
+        User user = new User();
+        user.setId(1L);
+        user.setFirstName("fulano");
+        user.setUsername("fulaninho");
+        user.setEmail("fulano@mail.com");
+        user.setProfilePicture(avatar);
+        user.setProfileCover(cover);
+
+        return user;
     }
 
     private Role createRole() {
