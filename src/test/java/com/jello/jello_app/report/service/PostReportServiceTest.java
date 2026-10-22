@@ -69,12 +69,7 @@ class PostReportServiceTest {
         when(postService.getPostById(2L)).thenReturn(post);
         when(userRoleService.getModerator()).thenReturn(moderator);
 
-        PostReportRequestDTO request = new PostReportRequestDTO();
-        request.setUserId(user.getId());
-        request.setPostId(post.getId());
-        request.setModeratorId(moderator.getId());
-
-        postReportService.createPostReport(request);
+        postReportService.createPostReport(createRequest, user.getId());
 
         verify(postReportRepository).save(any());
     }
@@ -83,7 +78,7 @@ class PostReportServiceTest {
     void shouldNotCreateReportWhenUserNotFound() {
         when(userService.getUserById(1L)).thenThrow(new UserNotFoundException(1L));
 
-        assertThrows(UserNotFoundException.class , () -> postReportService.createPostReport(createRequest));
+        assertThrows(UserNotFoundException.class , () -> postReportService.createPostReport(createRequest, user.getId()));
 
         verifyNoInteractions(postReportRepository);
     }
@@ -92,7 +87,7 @@ class PostReportServiceTest {
     void shouldNotCreateReportWhenPostNotFound() {
         when(postService.getPostById(2L)).thenThrow(new PostNotFoundException(1L));
 
-        assertThrows(PostNotFoundException.class , () -> postReportService.createPostReport(createRequest));
+        assertThrows(PostNotFoundException.class , () -> postReportService.createPostReport(createRequest, user.getId()));
 
         verifyNoInteractions(postReportRepository);
     }
@@ -101,7 +96,7 @@ class PostReportServiceTest {
     void shouldNotCreateReportWhenModeratorNotFound() {
         when(userRoleService.getModerator()).thenThrow(new ModeratorNotFoundException());
 
-        assertThrows(ModeratorNotFoundException.class , () -> postReportService.createPostReport(createRequest));
+        assertThrows(ModeratorNotFoundException.class , () -> postReportService.createPostReport(createRequest, user.getId()));
 
         verifyNoInteractions(postReportRepository);
     }
@@ -248,9 +243,8 @@ class PostReportServiceTest {
 
     private PostReportRequestDTO createRequestDTO() {
         PostReportRequestDTO request = new PostReportRequestDTO();
-        request.setUserId(user.getId());
         request.setPostId(post.getId());
-        request.setModeratorId(moderator.getId());
+        request.setContent("Conteúdo da denúncia mesmo");
 
         return request;
     }
