@@ -8,9 +8,9 @@ public class ReportMapper {
         return PostReportResponseDTO.builder()
                 .id(postReport.getId())
                 .content(postReport.getContent())
-                .postId(postReport.getReportedPost().getId())
-                .userId(postReport.getReporterUser().getId())
-                .moderatorId(postReport.getModeratorAnalyst().getId())
+                .postReportedId(postReport.getReportedPost().getId())
+                .userReporterId(postReport.getReporterUser().getId())
+                .moderatorAnalystId(postReport.getModeratorAnalyst().getId())
                 .build();
     }
 }

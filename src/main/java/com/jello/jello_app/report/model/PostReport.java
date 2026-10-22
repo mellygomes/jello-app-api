@@ -1,8 +1,8 @@
 package com.jello.jello_app.report.model;
 
 import com.jello.jello_app.common.model.Auditable;
-import com.jello.jello_app.role.model.Moderator;
 import com.jello.jello_app.post.model.Post;
+import com.jello.jello_app.role.model.Moderator;
 import com.jello.jello_app.user.model.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -22,11 +22,11 @@ public class PostReport extends Auditable {
     private String content;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "reported_post_id", nullable = false)
+    @JoinColumn(name = "post_reported_id", nullable = false)
     private Post reportedPost;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "reporter_user_id", nullable = false)
+    @JoinColumn(name = "user_reporter_id", nullable = false)
     private User reporterUser;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

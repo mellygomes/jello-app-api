@@ -11,6 +11,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PostReportRequestDTO {
     private Long postId;
-    private Long userId;
-    private Long moderatorId;
+    private String content;
 }

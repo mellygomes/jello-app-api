@@ -14,7 +14,7 @@ public class PostMapper {
                 .content(post.getContent())
                 .user(UserMapper.toDto(post.getUser()))
                 .likes(post.getLikes().size())
-                .comments(post.getComments().size())
+                .comments(post.getComments() != null ? post.getComments().size() : 0)
                 .images(post.getImages().stream().map(ImageMapper::toTeste).toList())
                 .tags(post.getTags().stream().map(TagMapper::toDto).toList())
                 .build();

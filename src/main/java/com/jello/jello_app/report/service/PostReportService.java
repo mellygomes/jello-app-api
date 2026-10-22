@@ -29,8 +29,8 @@ public class PostReportService {
     private final UserRoleService userRoleService;
 
     @Transactional
-    public PostReport createPostReport(PostReportRequestDTO request) {
-        User user = userService.getUserById(request.getUserId());
+    public PostReport createPostReport(PostReportRequestDTO request, Long userId) {
+        User user = userService.getUserById(userId);
         Post post = postService.getPostById(request.getPostId());
         Moderator moderator = userRoleService.getModerator();
 
@@ -38,6 +38,7 @@ public class PostReportService {
         postReport.setReporterUser(user);
         postReport.setReportedPost(post);
         postReport.setModeratorAnalyst(moderator);
+        postReport.setContent(request.getContent());
 
         return postReportRepository.save(postReport);
     }
