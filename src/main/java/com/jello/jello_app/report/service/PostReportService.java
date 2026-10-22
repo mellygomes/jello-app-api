@@ -63,7 +63,6 @@ public class PostReportService {
     @Transactional
     public void deletePostReport(Long reportId) {
         PostReport postReport = getPostReportById(reportId);
-
         postReportRepository.delete(postReport);
     }
 }
