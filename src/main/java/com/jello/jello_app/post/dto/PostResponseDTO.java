@@ -6,6 +6,8 @@ import com.jello.jello_app.user.dto.UserDTO;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -19,4 +21,6 @@ public class PostResponseDTO {
     private int comments;
     private List<ImageResponseDTO> images;
     private List<TagResponseDTO> tags;
+    private LocalDateTime createdAt;
+    private boolean visible;
 }

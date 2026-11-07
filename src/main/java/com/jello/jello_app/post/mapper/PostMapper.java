@@ -17,6 +17,8 @@ public class PostMapper {
                 .comments(post.getComments().size())
                 .images(post.getImages().stream().map(ImageMapper::toTeste).toList())
                 .tags(post.getTags().stream().map(TagMapper::toDto).toList())
+                .createdAt(post.getCreatedAt())
+                .visible(post.isVisible())
                 .build();
     }
 }
