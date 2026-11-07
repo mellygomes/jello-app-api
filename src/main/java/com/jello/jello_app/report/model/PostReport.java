@@ -19,11 +19,11 @@ import lombok.Setter;
 public class PostReport extends Auditable {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "reported_post_id", nullable = false)
+    @JoinColumn(name = "post_reported_id", nullable = false)
     private Post reportedPost;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "reporter_user_id", nullable = false)
+    @JoinColumn(name = "user_reporter_id", nullable = false)
     private User reporterUser;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

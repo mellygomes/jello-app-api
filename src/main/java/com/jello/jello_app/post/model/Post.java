@@ -53,7 +53,7 @@ public class Post extends Auditable {
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
-    private List<Comment> comments;
+    private List<Comment> comments = new ArrayList<>();
 
     @ManyToMany
     @JoinTable(
