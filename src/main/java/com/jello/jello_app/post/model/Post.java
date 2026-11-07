@@ -37,6 +37,9 @@ public class Post extends Auditable {
     private String title;
     private String content;
 
+    @Column(nullable = false)
+    private boolean visible = false;
+
     @Column(name = "ai_classified", nullable = false)
     private boolean aiClassified;
 
