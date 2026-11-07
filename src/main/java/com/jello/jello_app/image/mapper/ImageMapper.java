@@ -56,6 +56,10 @@ public class ImageMapper {
     }
 
     public static AvatarDTO toAvatarDTO(UserAvatar avatar) {
+        if (avatar == null) {
+            return null;
+        }
+
         return AvatarDTO.builder()
                 .id(avatar.getId())
                 .fileName(avatar.getFileName())
@@ -63,6 +67,10 @@ public class ImageMapper {
     }
 
     public static CoverDTO toCoverDTO(UserCover cover) {
+        if (cover == null) {
+            return null;
+        }
+
         return CoverDTO.builder()
                 .id(cover.getId())
                 .fileName(cover.getFileName())
