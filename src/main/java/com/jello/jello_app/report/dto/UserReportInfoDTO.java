@@ -11,5 +11,6 @@ public class UserReportInfoDTO {
     private String content;
     private boolean isApproved;
     private String userReporter;
+    private Long reportedId;
     private UserDTO userReported;
 }

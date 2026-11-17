@@ -79,6 +79,7 @@ public class UserReportService {
                         .content(ur.getContent())
                         .isApproved(ur.isApproved())
                         .userReporter(ur.getReporterUser().getFirstName())
+                        .reportedId(ur.getReportedUser().getId())
                         .userReported(UserMapper.toDto(ur.getReportedUser()))
                         .build()
                 )
