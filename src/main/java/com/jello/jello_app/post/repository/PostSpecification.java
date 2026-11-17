@@ -20,12 +20,10 @@ public class PostSpecification {
                 predicates.add(criteriaBuilder.equal(root.get("aiClassified"), false));
             }
 
-            if (filter.getTags() != null) {
-                filter.getTags().forEach(id ->
-                        predicates.add(
-                                criteriaBuilder.equal(root.get("tags").get("id"), id)
-                        )
-                );
+            if (filter.getTags() != null && !filter.getTags().isEmpty()) {
+                var tags = root.join("tags");
+                predicates.add(tags.get("id").in(filter.getTags()));
+                query.distinct(true);
             }
 
             if (filter.getSearch() != null && !filter.getSearch().isBlank()) {
