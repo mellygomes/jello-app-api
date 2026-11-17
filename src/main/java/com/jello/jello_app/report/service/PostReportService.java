@@ -1,10 +1,14 @@
 package com.jello.jello_app.report.service;
 
+import com.jello.jello_app.image.mapper.ImageMapper;
 import com.jello.jello_app.post.model.Post;
 import com.jello.jello_app.post.service.PostService;
+import com.jello.jello_app.report.dto.PostReportInfoDTO;
 import com.jello.jello_app.report.dto.PostReportRequestDTO;
 import com.jello.jello_app.report.dto.PostReportResponseDTO;
 import com.jello.jello_app.report.dto.UpdatePostReportDTO;
+import com.jello.jello_app.report.exception.ReportAlreadyApprovedException;
+import com.jello.jello_app.report.exception.ReportAlreadyUnapprovedException;
 import com.jello.jello_app.report.exception.ReportNotFoundException;
 import com.jello.jello_app.report.mapper.ReportMapper;
 import com.jello.jello_app.report.model.PostReport;
@@ -64,5 +68,42 @@ public class PostReportService {
     public void deletePostReport(Long reportId) {
         PostReport postReport = getPostReportById(reportId);
         postReportRepository.delete(postReport);
+    }
+
+    public List<PostReportInfoDTO> getReports() {
+        return postReportRepository.findAllWithDetails().stream()
+                .map(pr -> PostReportInfoDTO.builder()
+                        .id(pr.getId())
+                        .reportContent(pr.getContent())
+                        .isApproved(pr.isApproved())
+                        .post(pr.getReportedPost().getTitle())
+                        .name(pr.getReporterUser().getFirstName() + " " + pr.getReporterUser().getLastName())
+                        .postContent(pr.getReportedPost().getContent())
+                        .images(pr.getReportedPost().getImages().stream().distinct().map(ImageMapper::toTeste).toList())
+                        .build()
+                )
+                .toList();
+    }
+
+    @Transactional
+    public void approveReport(Long reportId) {
+        PostReport report = getPostReportById(reportId);
+
+        if (report.isApproved()) {
+            throw new ReportAlreadyApprovedException(reportId);
+        }
+
+        report.setApproved(true);
+    }
+
+    @Transactional
+    public void unapproveReport(Long reportId) {
+        PostReport report = getPostReportById(reportId);
+
+        if (!report.isApproved()) {
+            throw new ReportAlreadyUnapprovedException(reportId);
+        }
+
+        report.setApproved(false);
     }
 }

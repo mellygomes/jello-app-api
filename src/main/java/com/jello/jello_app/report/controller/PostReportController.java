@@ -1,5 +1,6 @@
 package com.jello.jello_app.report.controller;
 
+import com.jello.jello_app.report.dto.PostReportInfoDTO;
 import com.jello.jello_app.report.dto.PostReportRequestDTO;
 import com.jello.jello_app.report.dto.PostReportResponseDTO;
 import com.jello.jello_app.report.dto.UpdatePostReportDTO;
@@ -36,9 +37,24 @@ public class PostReportController {
         return ReportMapper.toPostReportDTO(report);
     }
 
-    @GetMapping("/list")
+    @GetMapping
     public List<PostReportResponseDTO> getAllReports() {
         return postReportService.getAllPostReports();
+    }
+
+    @GetMapping("/list")
+    public List<PostReportInfoDTO> getReports() {
+        return postReportService.getReports();
+    }
+
+    @PutMapping("/approve/{reportId}")
+    public void approve(@PathVariable Long reportId) {
+        postReportService.approveReport(reportId);
+    }
+
+    @PutMapping("/unapprove/{reportId}")
+    public void unapprove(@PathVariable Long reportId) {
+        postReportService.unapproveReport(reportId);
     }
 
     @PutMapping("/update/{reportId}")
