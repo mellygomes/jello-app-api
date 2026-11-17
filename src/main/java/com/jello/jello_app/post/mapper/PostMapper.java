@@ -10,6 +10,7 @@ public class PostMapper {
     public static PostResponseDTO toDto(Post post) {
         return PostResponseDTO.builder()
                 .id(post.getId())
+                .userId(post.getUser().getId())
                 .title(post.getTitle())
                 .content(post.getContent())
                 .user(UserMapper.toDto(post.getUser()))
