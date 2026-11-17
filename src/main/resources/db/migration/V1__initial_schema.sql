@@ -81,7 +81,7 @@ ALTER TABLE tb_user
 CREATE TABLE public.tb_role
 (
     id   BIGINT PRIMARY KEY DEFAULT nextval('primary_key_seq'),
-    name varchar(255) NOT NULL
+    name VARCHAR(255) NOT NULL
 );
 
 -- Tabela auxiliar de usuários <-> roles
@@ -218,6 +218,7 @@ CREATE TABLE public.tb_report_user
     id                   BIGINT PRIMARY KEY   DEFAULT nextval('primary_key_seq'),
     -- ID de referencia herdado da super classe Auditable para ser usado nas requisicoes
     reference_id         UUID UNIQUE NOT NULL,
+    content              TEXT        NOT NULL,
     reported_user_id     BIGINT      NOT NULL,
     reporter_user_id     BIGINT      NOT NULL,
     moderator_analyst_id BIGINT      NOT NULL,
@@ -242,6 +243,7 @@ CREATE TABLE public.tb_report_post
     id                   BIGINT PRIMARY KEY   DEFAULT nextval('primary_key_seq'),
     -- ID de referencia herdado da super classe Auditable para ser usado nas requisicoes
     reference_id         UUID UNIQUE NOT NULL,
+    content              TEXT        NOT NULL,
     post_reported_id     BIGINT      NOT NULL,
     user_reporter_id     BIGINT      NOT NULL,
     moderator_analyst_id BIGINT      NOT NULL,

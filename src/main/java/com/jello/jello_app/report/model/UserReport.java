@@ -17,6 +17,9 @@ import lombok.Setter;
 @Table(name = "tb_report_user")
 public class UserReport extends Auditable {
 
+    @Column(columnDefinition = "TEXT")
+    private String content;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "reported_user_id", nullable = false)
     private User reportedUser;

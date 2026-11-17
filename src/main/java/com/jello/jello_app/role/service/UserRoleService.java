@@ -1,10 +1,15 @@
 package com.jello.jello_app.role.service;
 
 import com.jello.jello_app.enumeration.RoleType;
+import com.jello.jello_app.role.dto.ModeratorResponseDTO;
+import com.jello.jello_app.role.exception.ModeratorNotFoundException;
 import com.jello.jello_app.role.exception.RoleNotFoundException;
 import com.jello.jello_app.role.exception.UserAlreadyHasModeratorException;
 import com.jello.jello_app.role.exception.UserDoesNotHaveRoleException;
+import com.jello.jello_app.role.mapper.ModeratorMapper;
+import com.jello.jello_app.role.model.Moderator;
 import com.jello.jello_app.role.model.Role;
+import com.jello.jello_app.role.repository.ModeratorRepository;
 import com.jello.jello_app.role.repository.RoleRepository;
 import com.jello.jello_app.user.exception.UserNotFoundException;
 import com.jello.jello_app.user.model.User;
@@ -18,6 +23,7 @@ public class UserRoleService {
 
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
+    private final ModeratorRepository moderatorRepository;
 
     public Role getRoleByName(String name) {
         return roleRepository.findByName(name)
@@ -53,5 +59,9 @@ public class UserRoleService {
         }
 
         return userRepository.save(user);
+    }
+
+    public Moderator getModerator() {
+        return moderatorRepository.findAll().getFirst();
     }
 }

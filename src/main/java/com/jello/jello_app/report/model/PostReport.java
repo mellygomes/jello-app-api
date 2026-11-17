@@ -1,8 +1,8 @@
 package com.jello.jello_app.report.model;
 
 import com.jello.jello_app.common.model.Auditable;
-import com.jello.jello_app.role.model.Moderator;
 import com.jello.jello_app.post.model.Post;
+import com.jello.jello_app.role.model.Moderator;
 import com.jello.jello_app.user.model.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -17,6 +17,9 @@ import lombok.Setter;
 @Entity
 @Table(name = "tb_report_post")
 public class PostReport extends Auditable {
+
+    @Column(columnDefinition = "TEXT")
+    private String content;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "post_reported_id", nullable = false)
