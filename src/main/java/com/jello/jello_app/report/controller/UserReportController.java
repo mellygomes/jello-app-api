@@ -1,6 +1,7 @@
 package com.jello.jello_app.report.controller;
 
 import com.jello.jello_app.report.dto.UpdateUserReportDTO;
+import com.jello.jello_app.report.dto.UserReportInfoDTO;
 import com.jello.jello_app.report.dto.UserReportRequestDTO;
 import com.jello.jello_app.report.dto.UserReportResponseDTO;
 import com.jello.jello_app.report.mapper.ReportMapper;
@@ -36,7 +37,7 @@ public class UserReportController {
         return ReportMapper.toUserReportDTO(report);
     }
 
-    @GetMapping("/list")
+    @GetMapping
     public List<UserReportResponseDTO> getAllReports() {
         return userReportService.getAllUsersReports();
     }
@@ -55,4 +56,18 @@ public class UserReportController {
         userReportService.deleteUserReport(reportId);
     }
 
+    @GetMapping("/list")
+    public List<UserReportInfoDTO> getReports() {
+        return userReportService.getReports();
+    }
+
+    @PutMapping("/approve/{reportId}")
+    public void approveReport(@PathVariable Long reportId) {
+        userReportService.approveReport(reportId);
+    }
+
+    @PutMapping("/unapprove/{reportId}")
+    public void unapproveReport(@PathVariable Long reportId) {
+        userReportService.unapproveReport(reportId);
+    }
 }

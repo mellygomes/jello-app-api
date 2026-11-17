@@ -1,14 +1,19 @@
 package com.jello.jello_app.report.service;
 
 import com.jello.jello_app.report.dto.UpdateUserReportDTO;
+import com.jello.jello_app.report.dto.UserReportInfoDTO;
 import com.jello.jello_app.report.dto.UserReportRequestDTO;
 import com.jello.jello_app.report.dto.UserReportResponseDTO;
+import com.jello.jello_app.report.exception.ReportAlreadyApprovedException;
+import com.jello.jello_app.report.exception.ReportAlreadyUnapprovedException;
 import com.jello.jello_app.report.exception.ReportNotFoundException;
+import com.jello.jello_app.report.exception.SelfReportException;
 import com.jello.jello_app.report.mapper.ReportMapper;
 import com.jello.jello_app.report.model.UserReport;
 import com.jello.jello_app.report.repository.UserReportRepository;
 import com.jello.jello_app.role.model.Moderator;
 import com.jello.jello_app.role.service.UserRoleService;
+import com.jello.jello_app.user.mapper.UserMapper;
 import com.jello.jello_app.user.model.User;
 import com.jello.jello_app.user.service.UserService;
 import jakarta.transaction.Transactional;
@@ -30,6 +35,10 @@ public class UserReportService {
         User reported = userService.getUserById(request.getUserReportedId());
         User reporter = userService.getUserById(userId);
         Moderator moderator = userRoleService.getModerator();
+
+        if (reported == reporter) {
+            throw new SelfReportException(userId);
+        }
 
         UserReport report = new UserReport();
         report.setContent(request.getContent());
@@ -61,5 +70,40 @@ public class UserReportService {
     public void deleteUserReport(Long reportId) {
         UserReport report = getUserReportById(reportId);
         userReportRepository.delete(report);
+    }
+
+    public List<UserReportInfoDTO> getReports() {
+        return userReportRepository.findAllWithDetails().stream()
+                .map(ur -> UserReportInfoDTO.builder()
+                        .id(ur.getId())
+                        .content(ur.getContent())
+                        .isApproved(ur.isApproved())
+                        .userReporter(ur.getReporterUser().getFirstName())
+                        .userReported(UserMapper.toDto(ur.getReportedUser()))
+                        .build()
+                )
+                .toList();
+    }
+
+    @Transactional
+    public void approveReport(Long reportId) {
+        UserReport report = getUserReportById(reportId);
+
+        if (report.isApproved()) {
+            throw new ReportAlreadyApprovedException(reportId);
+        }
+
+        report.setApproved(true);
+    }
+
+    @Transactional
+    public void unapproveReport(Long reportId) {
+        UserReport report = getUserReportById(reportId);
+
+        if (!report.isApproved()) {
+            throw new ReportAlreadyUnapprovedException(reportId);
+        }
+
+        report.setApproved(false);
     }
 }
