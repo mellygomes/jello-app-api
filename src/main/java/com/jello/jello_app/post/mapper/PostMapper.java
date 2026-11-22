@@ -8,12 +8,16 @@ import com.jello.jello_app.user.mapper.UserMapper;
 
 public class PostMapper {
     public static PostResponseDTO toDto(Post post) {
+        return toDto(post, false);
+    }
+
+    public static PostResponseDTO toDto(Post post, boolean isFollowing) {
         return PostResponseDTO.builder()
                 .id(post.getId())
                 .userId(post.getUser().getId())
                 .title(post.getTitle())
                 .content(post.getContent())
-                .user(UserMapper.toDto(post.getUser()))
+                .user(UserMapper.toPostAuthorDto(post.getUser(), isFollowing))
                 .likes(post.getLikes().size())
                 .comments(post.getComments() != null ? post.getComments().size() : 0)
                 .images(post.getImages().stream().map(ImageMapper::toTeste).toList())

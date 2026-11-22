@@ -116,7 +116,11 @@ public class PostService {
                 .where(PostSpecification.withFilter(filter))
                 .and(PostSpecification.orderByFollowingUser(followingIds));
 
-        return postRepository.findAll(spec, pageable).map(PostMapper::toDto);
+        return postRepository.findAll(spec, pageable)
+                .map(post -> PostMapper.toDto(
+                        post,
+                        followingIds.contains(post.getUser().getId())
+                ));
     }
 
     public Page<PostResponseDTO> getAllPostsByUser(Long userId, FilterRequestDTO filter, int page, int size) {

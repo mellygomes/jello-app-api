@@ -8,12 +8,28 @@ import com.jello.jello_app.user.model.User;
 
 public class UserMapper {
     public static UserDTO toDto(User user) {
+        return toDto(user, false);
+    }
+
+    public static UserDTO toDto(User user, boolean isFollowing) {
         return UserDTO.builder()
+                .id(user.getId())
                 .email(user.getEmail())
                 .username(user.getUsername())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .bio(user.getBio())
+                .isFollowing(isFollowing)
+                .build();
+    }
+
+    public static UserDTO toPostAuthorDto(User user, boolean isFollowing) {
+        return UserDTO.builder()
+                .id(user.getId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .isFollowing(isFollowing)
+                .avatarId(user.getProfilePicture() == null ? null : user.getProfilePicture().getId())
                 .build();
     }
 

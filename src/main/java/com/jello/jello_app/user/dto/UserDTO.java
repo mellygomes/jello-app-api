@@ -6,9 +6,12 @@ import lombok.Data;
 @Data
 @Builder
 public class UserDTO {
+    private Long id;
     private String firstName;
     private String lastName;
     private String email;
     private String username;
     private String bio;
+    private Boolean isFollowing;
+    private Long avatarId;
 }
