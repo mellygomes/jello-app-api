@@ -8,6 +8,7 @@ import com.jello.jello_app.image.model.PostImage;
 import com.jello.jello_app.image.model.UserAvatar;
 import com.jello.jello_app.image.model.UserCover;
 import com.jello.jello_app.post.model.Post;
+import com.jello.jello_app.utils.ImageValidator;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -34,6 +35,23 @@ public class ImageMapper {
                 .fileSize(file.getSize())
                 .data(file.getBytes())
                 .post(post)
+                .build();
+    }
+
+    public static PostImage toPostImage(ImageValidator.ValidatedImage image, Post post) {
+        return PostImage.builder()
+                .fileName(image.fileName())
+                .fileType(image.contentType())
+                .fileSize((long) image.bytes().length)
+                .data(image.bytes())
+                .post(post)
+                .build();
+    }
+
+    public static ImageResponseDTO toImageResponse(Long imageId) {
+        return ImageResponseDTO.builder()
+                .id(imageId)
+                .url("/api/v1/images/" + imageId)
                 .build();
     }
 

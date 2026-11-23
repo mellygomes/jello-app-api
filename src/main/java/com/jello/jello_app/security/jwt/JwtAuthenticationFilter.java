@@ -2,6 +2,7 @@ package com.jello.jello_app.security.jwt;
 
 import com.jello.jello_app.auth.exception.InvalidTokenException;
 import com.jello.jello_app.domain.RequestContext;
+import com.jello.jello_app.security.user.AppUserDetails;
 import com.jello.jello_app.security.user.AppUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -31,14 +33,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Long userId = jwtUtils.getUserIdFromToken(jwt);
                 UserDetails user = userDetailsService.loadUserById(userId);
 
-                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(auth);
+                // Usuario banido perde o acesso mesmo com o token ainda valido
+                boolean banned = user instanceof AppUserDetails details && details.isBanned();
 
-                RequestContext.setUserId(userId);
+                if (!banned) {
+                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                    auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+
+                    RequestContext.setUserId(userId);
+                }
             }
-        } catch (InvalidTokenException ex) {
-            logger.debug("Não foi possível definir a autenticação do usuário: {}", ex);
+        } catch (InvalidTokenException | UsernameNotFoundException ex) {
+            logger.debug("Não foi possível definir a autenticação do usuário: " + ex.getMessage());
         }
 
         try {

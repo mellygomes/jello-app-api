@@ -21,6 +21,7 @@ public class AppUserDetails implements UserDetails {
     private String email;
     private String username;
     private String password;
+    private boolean banned;
 
     private Collection<GrantedAuthority> authorities;
 
@@ -35,6 +36,7 @@ public class AppUserDetails implements UserDetails {
                 user.getEmail(),
                 user.getUsername(),
                 user.getPassword(),
+                user.isBanned(),
                 authorities
         );
     }

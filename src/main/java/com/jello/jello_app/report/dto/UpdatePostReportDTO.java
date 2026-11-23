@@ -10,5 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UpdatePostReportDTO {
+    @jakarta.validation.constraints.NotBlank
+    @jakarta.validation.constraints.Size(max = 1000)
     private String content;
 }

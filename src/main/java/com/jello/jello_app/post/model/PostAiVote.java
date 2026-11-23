@@ -37,6 +37,10 @@ public class PostAiVote {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    // true = usuario acha que e IA, false = acha que e arte humana
+    @Column(name = "vote_ai", nullable = false)
+    private boolean voteAi;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

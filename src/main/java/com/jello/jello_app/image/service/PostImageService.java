@@ -1,18 +1,17 @@
 package com.jello.jello_app.image.service;
 
 import com.jello.jello_app.image.dto.ImageDTO;
-import com.jello.jello_app.image.exception.FileReadException;
 import com.jello.jello_app.image.exception.PostImageNotFoundException;
 import com.jello.jello_app.image.mapper.ImageMapper;
 import com.jello.jello_app.image.model.PostImage;
 import com.jello.jello_app.image.repository.PostImageRepository;
 import com.jello.jello_app.post.model.Post;
+import com.jello.jello_app.utils.ImageValidator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,16 +25,17 @@ public class PostImageService {
     public List<ImageDTO> saveImageForPost(List<MultipartFile> files, Post post) {
         List<ImageDTO> savedImagesDTO = new ArrayList<>();
 
+        // Valida todas antes de salvar qualquer uma
+        List<ImageValidator.ValidatedImage> validatedImages = new ArrayList<>();
         for (MultipartFile file : files) {
-            try {
-                PostImage image = ImageMapper.toPostImage(file, post);
-                PostImage savedImage = imageRepository.save(image);
-                ImageDTO imageDTO = ImageMapper.toDto(savedImage);
+            validatedImages.add(ImageValidator.validate(file));
+        }
 
-                savedImagesDTO.add(imageDTO);
-            } catch (IOException ex) {
-                throw new FileReadException(file.getOriginalFilename(), ex);
-            }
+        for (ImageValidator.ValidatedImage validated : validatedImages) {
+            PostImage image = ImageMapper.toPostImage(validated, post);
+            PostImage savedImage = imageRepository.save(image);
+
+            savedImagesDTO.add(ImageMapper.toDto(savedImage));
         }
 
         return savedImagesDTO;

@@ -1,12 +1,12 @@
 package com.jello.jello_app.report.service;
 
+import com.jello.jello_app.auth.service.AuthService;
 import com.jello.jello_app.report.dto.UpdateUserReportDTO;
 import com.jello.jello_app.report.dto.UserReportRequestDTO;
 import com.jello.jello_app.report.dto.UserReportResponseDTO;
 import com.jello.jello_app.report.exception.ReportNotFoundException;
 import com.jello.jello_app.report.model.UserReport;
 import com.jello.jello_app.report.repository.UserReportRepository;
-import com.jello.jello_app.role.exception.ModeratorNotFoundException;
 import com.jello.jello_app.role.model.Moderator;
 import com.jello.jello_app.role.service.UserRoleService;
 import com.jello.jello_app.user.exception.UserNotFoundException;
@@ -36,6 +36,9 @@ class UserReportServiceTest {
     private UserReportRepository userReportRepository;
 
     @Mock
+    private AuthService authService;
+
+    @Mock
     private UserRoleService userRoleService;
 
     @Mock
@@ -63,7 +66,7 @@ class UserReportServiceTest {
     void shouldCreateUserReport() {
         when(userService.getUserById(1L)).thenReturn(reportedUser);
         when(userService.getUserById(2L)).thenReturn(reporterUser);
-        when(userRoleService.getModerator()).thenReturn(moderator);
+        when(userRoleService.findModerator()).thenReturn(Optional.of(moderator));
 
         userReportService.createUserReport(createRequest, reporterUser.getId());
 
@@ -80,12 +83,29 @@ class UserReportServiceTest {
     }
 
     @Test
-    void shouldNotCreateReportWhenModeratorNotFound() {
-        when(userRoleService.getModerator()).thenThrow(new ModeratorNotFoundException());
+    void shouldCreateReportWithoutAnalystWhenNoModeratorExists() {
+        when(userService.getUserById(1L)).thenReturn(reportedUser);
+        when(userService.getUserById(2L)).thenReturn(reporterUser);
+        when(userRoleService.findModerator()).thenReturn(Optional.empty());
+        when(userReportRepository.save(any(UserReport.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        assertThrows(ModeratorNotFoundException.class, () -> userReportService.createUserReport(createRequest, reporterUser.getId()));
+        UserReport saved = userReportService.createUserReport(createRequest, reporterUser.getId());
 
-        verifyNoInteractions(userReportRepository);
+        assertNull(saved.getModeratorAnalyst());
+        verify(userReportRepository).save(any());
+    }
+
+    @Test
+    void shouldClaimReportWithoutAnalystWhenApproving() {
+        report.setModeratorAnalyst(null);
+        when(userReportRepository.findById(1L)).thenReturn(Optional.of(report));
+        when(authService.getAuthenticatedUser()).thenReturn(reporterUser);
+        when(userRoleService.getModeratorByUser(reporterUser)).thenReturn(moderator);
+
+        userReportService.approveReport(1L);
+
+        assertTrue(report.isApproved());
+        assertEquals(moderator, report.getModeratorAnalyst());
     }
 
     @Test

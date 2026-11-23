@@ -1,9 +1,11 @@
 package com.jello.jello_app.post.service;
 
 import com.jello.jello_app.auth.service.AuthService;
+import com.jello.jello_app.enumeration.PostSort;
 import com.jello.jello_app.follow.repository.FollowRepository;
 import com.jello.jello_app.image.service.PostImageService;
 import com.jello.jello_app.post.dto.CreatePostRequestDTO;
+import com.jello.jello_app.post.dto.FilterRequestDTO;
 import com.jello.jello_app.post.dto.PostResponseDTO;
 import com.jello.jello_app.post.dto.UpdatePostRequestDTO;
 import com.jello.jello_app.post.exception.PostNotFoundException;
@@ -15,6 +17,7 @@ import com.jello.jello_app.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -51,6 +54,9 @@ class PostServiceTest {
 
     @Mock
     private TagService tagService;
+
+    @Mock
+    private PostResponseAssembler postResponseAssembler;
 
     @InjectMocks
     private PostService postService;
@@ -212,8 +218,9 @@ class PostServiceTest {
         Page<Post> posts = new PageImpl<>(List.of(post));
 
         when(authService.getAuthenticatedUser()).thenReturn(user);
-        when(followRepository.findUsersFollowedBy(user.getId())).thenReturn(List.of());
         when(postRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(posts);
+        when(postResponseAssembler.toPage(any(), any())).thenReturn(
+                new PageImpl<>(List.of(PostResponseDTO.builder().id(post.getId()).build())));
 
         Page<PostResponseDTO> result = postService.findPosts(null, 0, 10);
 
@@ -221,15 +228,43 @@ class PostServiceTest {
         assertEquals(1, result.getTotalElements());
 
         verify(authService, times(1)).getAuthenticatedUser();
-        verify(followRepository, times(1)).findUsersFollowedBy(user.getId());
         verify(postRepository, times(1)).findAll(any(Specification.class), any(Pageable.class));
+    }
+
+    // Explorar nao exclui mais quem eu sigo nem os meus posts, e a ordem vai na Specification (Pageable sem Sort)
+    @Test
+    void shouldExplorePostsWithoutExcludingFollowedUsers() {
+        Page<Post> posts = new PageImpl<>(List.of(post));
+        FilterRequestDTO filter = new FilterRequestDTO();
+        filter.setSort(PostSort.POPULAR);
+
+        when(authService.getAuthenticatedUser()).thenReturn(user);
+        when(postRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(posts);
+        when(postResponseAssembler.toPage(any(), any())).thenReturn(
+                new PageImpl<>(List.of(PostResponseDTO.builder().id(post.getId()).build())));
+
+        Page<PostResponseDTO> result = postService.findExplorePosts(filter, 0, 10);
+
+        assertEquals(1, result.getTotalElements());
+
+        ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
+        verify(postRepository).findAll(any(Specification.class), pageable.capture());
+        assertTrue(pageable.getValue().getSort().isUnsorted());
+        verifyNoInteractions(followRepository);
+    }
+
+    @Test
+    void shouldCapPageSizeAtMax() {
+        assertEquals(PostService.MAX_PAGE_SIZE, PostService.buildPageable(0, 1000).getPageSize());
+        assertEquals(1, PostService.buildPageable(-3, 0).getPageSize());
+        assertEquals(0, PostService.buildPageable(-3, 10).getPageNumber());
     }
 
     // Teste para simular caminho falho ao tentar recuperar posts do feed
     @Test
     void shouldFailWhenGetFeedPosts() {
         when(authService.getAuthenticatedUser()).thenReturn(user);
-        when(followRepository.findUsersFollowedBy(user.getId()))
+        when(postRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenThrow(new RuntimeException("Erro ao recuperar usuários seguidos"));
 
         RuntimeException exception = assertThrows(
@@ -243,8 +278,7 @@ class PostServiceTest {
         );
 
         verify(authService, times(1)).getAuthenticatedUser();
-        verify(followRepository, times(1)).findUsersFollowedBy(user.getId());
-        verifyNoInteractions(postRepository);
+        verify(postRepository, times(1)).findAll(any(Specification.class), any(Pageable.class));
     }
 
     private CreatePostRequestDTO createRequest() {
