@@ -6,6 +6,7 @@ import com.jello.jello_app.post.service.PostService;
 import com.jello.jello_app.security.user.AppUserDetails;
 import com.jello.jello_app.user.dto.ChangePasswordRequestDTO;
 import com.jello.jello_app.user.dto.ProfileDTO;
+import com.jello.jello_app.user.dto.StorageDTO;
 import com.jello.jello_app.user.dto.UpdateUserRequestDTO;
 import com.jello.jello_app.user.dto.UserSummaryDTO;
 import com.jello.jello_app.user.service.UserService;
@@ -118,5 +119,13 @@ public class UserController {
             @ModelAttribute FilterRequestDTO request
     ) {
         return postService.getAllPostsByUser(userId, request, page, size);
+    }
+
+    @GetMapping("/storage")
+    @PreAuthorize("isAuthenticated()")
+    public StorageDTO getUserStorage(
+            @AuthenticationPrincipal AppUserDetails userDetails
+    ) {
+        return userService.getUserStorage(userDetails.getId());
     }
 }

@@ -188,4 +188,25 @@ public class PostService {
     public static boolean isModerator(User user) {
         return user != null && user.hasRole(RoleType.ROLE_MODERATOR.getName());
     }
+
+    public Page<PostResponseDTO> getMyPortfolioPosts(
+            FilterRequestDTO filter,
+            int page,
+            int size
+    ) {
+        User user = authService.getAuthenticatedUser();
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by("createdAt").descending()
+        );
+
+        Specification<Post> spec = Specification
+                .where(PostSpecification.withFilter(filter))
+                .and(PostSpecification.byUserId(user.getId()));
+
+        return postRepository.findAll(spec, pageable)
+                .map(PostMapper::toDto);
+    }
 }

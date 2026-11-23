@@ -106,6 +106,7 @@ CREATE TABLE public.tb_post
     title                   VARCHAR(255) NOT NULL,
     content                 VARCHAR(255),
     ai_classified           BOOLEAN      NOT NULL DEFAULT FALSE,
+    visible                 BOOLEAN      NOT NULL DEFAULT FALSE,
 
     -- Colunas de auditoria herdadas da super classe Auditable
     created_at              TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
