@@ -24,6 +24,10 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class UserAvatarServiceTest {
 
+    // cabecalho de um PNG de verdade, o validador olha esses bytes
+    private static final byte[] PNG_BYTES = {(byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0};
+
+
     @Mock
     private UserAvatarRepository avatarRepository;
 
@@ -79,7 +83,7 @@ class UserAvatarServiceTest {
                 "avatar",
                 "avatar.png",
                 "image/png",
-                "conteudo mesmo".getBytes()
+                PNG_BYTES
         );
 
         when(avatarRepository.save(any())).thenReturn(avatar);

@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -13,4 +15,9 @@ public class UserResponseDTO {
     private Long id;
     private String username;
     private String email;
+    private String firstName;
+    private String lastName;
+    private Long avatarId;
+    private List<String> roles;
+    private boolean moderator;
 }

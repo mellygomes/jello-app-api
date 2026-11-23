@@ -11,6 +11,7 @@ import com.jello.jello_app.report.exception.SelfReportException;
 import com.jello.jello_app.report.mapper.ReportMapper;
 import com.jello.jello_app.report.model.UserReport;
 import com.jello.jello_app.report.repository.UserReportRepository;
+import com.jello.jello_app.auth.service.AuthService;
 import com.jello.jello_app.role.model.Moderator;
 import com.jello.jello_app.role.service.UserRoleService;
 import com.jello.jello_app.user.mapper.UserMapper;
@@ -28,13 +29,15 @@ public class UserReportService {
 
     private final UserService userService;
     private final UserRoleService userRoleService;
+    private final AuthService authService;
     private final UserReportRepository userReportRepository;
 
     @Transactional
     public UserReport createUserReport(UserReportRequestDTO request, Long userId) {
         User reported = userService.getUserById(request.getUserReportedId());
         User reporter = userService.getUserById(userId);
-        Moderator moderator = userRoleService.getModerator();
+        // sem moderador cadastrado a denuncia nasce sem analista, nao deixa de ser criada
+        Moderator moderator = userRoleService.findModerator().orElse(null);
 
         if (reported == reporter) {
             throw new SelfReportException(userId);
@@ -81,6 +84,7 @@ public class UserReportService {
                         .userReporter(ur.getReporterUser().getFirstName())
                         .reportedId(ur.getReportedUser().getId())
                         .userReported(UserMapper.toDto(ur.getReportedUser()))
+                        .reportedBanned(ur.getReportedUser().isBanned())
                         .build()
                 )
                 .toList();
@@ -94,6 +98,7 @@ public class UserReportService {
             throw new ReportAlreadyApprovedException(reportId);
         }
 
+        claimIfUnassigned(report);
         report.setApproved(true);
     }
 
@@ -105,6 +110,17 @@ public class UserReportService {
             throw new ReportAlreadyUnapprovedException(reportId);
         }
 
+        claimIfUnassigned(report);
         report.setApproved(false);
+    }
+
+    // Quem analisa assume a denuncia se ela ficou sem analista (ex: o moderador anterior foi apagado)
+    private void claimIfUnassigned(UserReport report) {
+        if (report.getModeratorAnalyst() != null) return;
+
+        User actor = authService.getAuthenticatedUser();
+        if (actor != null) {
+            report.setModeratorAnalyst(userRoleService.getModeratorByUser(actor));
+        }
     }
 }

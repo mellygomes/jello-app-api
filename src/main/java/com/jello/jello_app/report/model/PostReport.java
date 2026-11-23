@@ -29,8 +29,8 @@ public class PostReport extends Auditable {
     @JoinColumn(name = "user_reporter_id", nullable = false)
     private User reporterUser;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "moderator_analyst_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "moderator_analyst_id")
     private Moderator moderatorAnalyst;
 
     @Column(name = "is_approved", nullable = false)

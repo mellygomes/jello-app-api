@@ -17,7 +17,8 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Comment extends Auditable {
 
-    private Long original_comment_id;
+    @Column(name = "original_comment_id")
+    private Long originalCommentId;
 
     @Column(name = "content", nullable = false)
     private String content;

@@ -13,6 +13,7 @@ import com.jello.jello_app.report.exception.ReportNotFoundException;
 import com.jello.jello_app.report.mapper.ReportMapper;
 import com.jello.jello_app.report.model.PostReport;
 import com.jello.jello_app.report.repository.PostReportRepository;
+import com.jello.jello_app.auth.service.AuthService;
 import com.jello.jello_app.role.model.Moderator;
 import com.jello.jello_app.role.service.UserRoleService;
 import com.jello.jello_app.user.model.User;
@@ -31,12 +32,14 @@ public class PostReportService {
     private final PostService postService;
     private final PostReportRepository postReportRepository;
     private final UserRoleService userRoleService;
+    private final AuthService authService;
 
     @Transactional
     public PostReport createPostReport(PostReportRequestDTO request, Long userId) {
         User user = userService.getUserById(userId);
         Post post = postService.getPostById(request.getPostId());
-        Moderator moderator = userRoleService.getModerator();
+        // sem moderador cadastrado a denuncia nasce sem analista, nao deixa de ser criada
+        Moderator moderator = userRoleService.findModerator().orElse(null);
 
         PostReport postReport = new PostReport();
         postReport.setReporterUser(user);
@@ -79,6 +82,9 @@ public class PostReportService {
                         .post(pr.getReportedPost().getTitle())
                         .name(pr.getReporterUser().getFirstName() + " " + pr.getReporterUser().getLastName())
                         .postContent(pr.getReportedPost().getContent())
+                        .postId(pr.getReportedPost().getId())
+                        .postAuthorId(pr.getReportedPost().getUser().getId())
+                        .postBanned(pr.getReportedPost().isBanned())
                         .images(pr.getReportedPost().getImages().stream().distinct().map(ImageMapper::toTeste).toList())
                         .build()
                 )
@@ -93,6 +99,7 @@ public class PostReportService {
             throw new ReportAlreadyApprovedException(reportId);
         }
 
+        claimIfUnassigned(report);
         report.setApproved(true);
     }
 
@@ -104,6 +111,17 @@ public class PostReportService {
             throw new ReportAlreadyUnapprovedException(reportId);
         }
 
+        claimIfUnassigned(report);
         report.setApproved(false);
+    }
+
+    // Quem analisa assume a denuncia se ela ficou sem analista (ex: o moderador anterior foi apagado)
+    private void claimIfUnassigned(PostReport report) {
+        if (report.getModeratorAnalyst() != null) return;
+
+        User actor = authService.getAuthenticatedUser();
+        if (actor != null) {
+            report.setModeratorAnalyst(userRoleService.getModeratorByUser(actor));
+        }
     }
 }

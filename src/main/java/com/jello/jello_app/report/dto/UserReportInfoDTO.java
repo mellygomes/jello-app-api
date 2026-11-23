@@ -13,4 +13,5 @@ public class UserReportInfoDTO {
     private String userReporter;
     private Long reportedId;
     private UserDTO userReported;
+    private boolean reportedBanned;
 }

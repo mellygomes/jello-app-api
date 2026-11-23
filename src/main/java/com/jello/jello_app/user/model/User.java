@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -18,6 +19,7 @@ import java.util.List;
 
 @Getter
 @Setter
+@BatchSize(size = 50)
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
@@ -65,4 +67,9 @@ public class User extends Auditable {
             inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id")
     )
     private Collection<Role> roles = new HashSet<>();
+
+    // Confere se o usuario tem determinado cargo
+    public boolean hasRole(String roleName) {
+        return roles != null && roles.stream().anyMatch(role -> roleName.equals(role.getName()));
+    }
 }

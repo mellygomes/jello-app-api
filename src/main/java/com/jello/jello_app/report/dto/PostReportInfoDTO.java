@@ -15,5 +15,8 @@ public class PostReportInfoDTO {
     private String post;
     private String name;
     private String postContent;
+    private Long postId;
+    private Long postAuthorId;
+    private boolean postBanned;
     private List<ImageResponseDTO> images;
 }

@@ -5,6 +5,7 @@ import com.jello.jello_app.role.exception.RoleNotFoundException;
 import com.jello.jello_app.role.exception.UserAlreadyHasModeratorException;
 import com.jello.jello_app.role.exception.UserDoesNotHaveRoleException;
 import com.jello.jello_app.role.model.Role;
+import com.jello.jello_app.role.repository.ModeratorRepository;
 import com.jello.jello_app.role.repository.RoleRepository;
 import com.jello.jello_app.user.exception.UserNotFoundException;
 import com.jello.jello_app.user.model.User;
@@ -29,6 +30,9 @@ class UserRoleServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private ModeratorRepository moderatorRepository;
 
     @InjectMocks
     private UserRoleService userRoleService;

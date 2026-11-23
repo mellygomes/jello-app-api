@@ -12,6 +12,7 @@ public class UserDTO {
     private String email;
     private String username;
     private String bio;
-    private Boolean isFollowing;
     private Long avatarId;
+    // O feed da main usa esse campo no autor do post
+    private Boolean isFollowing;
 }
