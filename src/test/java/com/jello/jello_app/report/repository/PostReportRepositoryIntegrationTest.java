@@ -105,6 +105,21 @@ class PostReportRepositoryIntegrationTest {
     }
 
     @Test
+    void shouldKeepReportWhenModeratorIsDeleted() {
+        PostReport saved = postReportRepository.saveAndFlush(createReport());
+        Long reportId = saved.getId();
+
+        // solta o report do contexto pra o Hibernate nao brigar com o moderador removido
+        entityManager.clear();
+        entityManager.remove(entityManager.find(Moderator.class, moderator.getId()));
+        entityManager.flush();
+        entityManager.clear();
+
+        PostReport found = postReportRepository.findById(reportId).orElseThrow();
+        assertNull(found.getModeratorAnalyst());
+    }
+
+    @Test
     void shouldDeleteReport() {
         PostReport saved = postReportRepository.saveAndFlush(createReport());
         Long reportId = saved.getId();
@@ -118,6 +133,7 @@ class PostReportRepositoryIntegrationTest {
 
     private PostReport createReport() {
         PostReport report = new PostReport();
+        report.setContent("Denúncia de teste");
         report.setReportedPost(post);
         report.setReporterUser(reporter);
         report.setModeratorAnalyst(moderator);

@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Data
@@ -22,4 +23,12 @@ public class PostResponseDTO {
     private int comments;
     private List<ImageResponseDTO> images;
     private List<TagResponseDTO> tags;
+    private OffsetDateTime createdAt;
+    private boolean likedByMe;
+    // NONE, AI ou HUMAN
+    private String classification;
+    private boolean aiClassified;
+    private boolean banned;
+    private AiVoteResponseDTO aiVotes;
+    private PostAuthorDTO author;
 }

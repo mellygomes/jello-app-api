@@ -8,6 +8,7 @@ import com.jello.jello_app.image.repository.UserAvatarRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import com.jello.jello_app.utils.ImageValidator;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -44,19 +45,19 @@ public class UserAvatarService {
         return avatarRepository.save(avatar);
     }
 
+    // Apaga a foto do banco (usado quando a conta e excluida)
+    public void deleteAvatar(UserAvatar avatar) {
+        if (avatar != null) avatarRepository.delete(avatar);
+    }
+
     public UserAvatar updateUserAvatar(UserAvatar avatar, MultipartFile image) {
+        ImageValidator.ValidatedImage validated = ImageValidator.validate(image);
 
-        try {
+        avatar.setFileName(validated.fileName());
+        avatar.setFileType(validated.contentType());
+        avatar.setFileSize((long) validated.bytes().length);
+        avatar.setData(validated.bytes());
 
-            avatar.setFileName(image.getOriginalFilename());
-            avatar.setFileType(image.getContentType());
-            avatar.setFileSize(image.getSize());
-            avatar.setData(image.getBytes());
-
-            return avatarRepository.save(avatar);
-
-        } catch (IOException ex) {
-            throw new FileReadException(avatar.getFileName(), ex);
-        }
+        return avatarRepository.save(avatar);
     }
 }

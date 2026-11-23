@@ -1,5 +1,6 @@
 package com.jello.jello_app.post.dto;
 
+import com.jello.jello_app.enumeration.PostSort;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,4 +19,6 @@ public class FilterRequestDTO {
     private List<Long> tags;
     private LocalDate initialDate;
     private LocalDate finalDate;
+    // RECENT (padrao), OLDEST, POPULAR ou COMMENTED
+    private PostSort sort = PostSort.RECENT;
 }

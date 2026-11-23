@@ -12,7 +12,7 @@ public class ReportMapper {
                 .content(postReport.getContent())
                 .postReportedId(postReport.getReportedPost().getId())
                 .userReporterId(postReport.getReporterUser().getId())
-                .moderatorAnalystId(postReport.getModeratorAnalyst().getId())
+                .moderatorAnalystId(postReport.getModeratorAnalyst() != null ? postReport.getModeratorAnalyst().getId() : null)
                 .build();
     }
     public static UserReportResponseDTO toUserReportDTO(UserReport userReport) {
@@ -21,7 +21,7 @@ public class ReportMapper {
                 .content(userReport.getContent())
                 .userReporterId(userReport.getReporterUser().getId())
                 .userReportedId(userReport.getReportedUser().getId())
-                .moderatorAnalystId(userReport.getModeratorAnalyst().getId())
+                .moderatorAnalystId(userReport.getModeratorAnalyst() != null ? userReport.getModeratorAnalyst().getId() : null)
                 .build();
     }
 }

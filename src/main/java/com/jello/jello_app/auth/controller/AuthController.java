@@ -4,17 +4,24 @@ import com.jello.jello_app.auth.dto.LoginRequestDTO;
 import com.jello.jello_app.auth.dto.RegisterRequestDTO;
 import com.jello.jello_app.auth.dto.UserResponseDTO;
 import com.jello.jello_app.auth.service.AuthService;
+import com.jello.jello_app.auth.service.LoginAttemptService;
+import com.jello.jello_app.enumeration.RoleType;
 import com.jello.jello_app.security.jwt.JwtUtils;
 import com.jello.jello_app.security.user.AppUserDetails;
 import com.jello.jello_app.user.dto.UserDTO;
 import com.jello.jello_app.user.mapper.UserMapper;
 import com.jello.jello_app.user.model.User;
 import com.jello.jello_app.user.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,10 +35,30 @@ public class AuthController {
     private final AuthService authService;
     private final UserService userService;
     private final JwtUtils jwtUtils;
+    private final LoginAttemptService loginAttemptService;
+
+    // secure = true quando o site roda em https (producao)
+    @Value("${auth.cookie.secure:false}")
+    private boolean cookieSecure;
+
+    @Value("${auth.cookie.same-site:Lax}")
+    private String cookieSameSite;
 
     @PostMapping("/login")
-    public ResponseEntity<Void> login(@RequestBody LoginRequestDTO request) {
-        Authentication authentication = authService.login(request);
+    public ResponseEntity<Void> login(@Valid @RequestBody LoginRequestDTO request, HttpServletRequest httpRequest) {
+        String attemptKey = loginAttemptService.keyFor(request.getUsername(), httpRequest.getRemoteAddr());
+        loginAttemptService.checkAllowed(attemptKey);
+
+        Authentication authentication;
+        try {
+            authentication = authService.login(request);
+        } catch (BadCredentialsException ex) {
+            loginAttemptService.recordFailure(attemptKey);
+            throw ex;
+        }
+
+        loginAttemptService.reset(attemptKey);
+
         String jwt = jwtUtils.generateTokenForUser(authentication);
         ResponseCookie cookie = buildResponseCookie(jwt, Duration.ofHours(1));
 
@@ -39,7 +66,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public UserDTO register(@RequestBody RegisterRequestDTO request) {
+    public UserDTO register(@Valid @RequestBody RegisterRequestDTO request) {
         User user = userService.register(request);
         return UserMapper.toDto(user);
     }
@@ -50,28 +77,32 @@ public class AuthController {
         return ResponseEntity.noContent().header(HttpHeaders.SET_COOKIE, cleanCookie.toString()).build();
     }
 
-    // Valida usuario logado e retorna dados para usar no front
+    // Valida usuario logado e retorna dados para usar no front (sem login = 401)
     @GetMapping("/me")
     public UserResponseDTO me(@AuthenticationPrincipal AppUserDetails userDetails) {
-        UserResponseDTO responseDTO = new UserResponseDTO();
-        if (userDetails != null) {
-            responseDTO.setId(userDetails.getId());
-            responseDTO.setUsername(userDetails.getUsername());
-            responseDTO.setEmail(userDetails.getEmail());
+        User user = userService.getUserById(userDetails.getId());
 
-        }
-        return responseDTO;
+        return UserResponseDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .avatarId(UserMapper.avatarId(user))
+                .roles(userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
+                .moderator(user.hasRole(RoleType.ROLE_MODERATOR.getName()))
+                .build();
     }
 
     private ResponseCookie buildResponseCookie(String jwt, Duration maxAge) {
         return ResponseCookie
                 .from("access_token", jwt)
                 .httpOnly(true)
-                // secure setado como false para desenvolvimento
-                .secure(false)
+                // secure fica false no desenvolvimento (http), ligar com auth.cookie.secure=true em producao
+                .secure(cookieSecure)
                 .path("/")
                 .maxAge(maxAge)
-                .sameSite("Lax")
+                .sameSite(cookieSameSite)
                 .build();
     }
 }

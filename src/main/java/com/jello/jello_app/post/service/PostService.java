@@ -1,7 +1,10 @@
 package com.jello.jello_app.post.service;
 
 import com.jello.jello_app.auth.service.AuthService;
-import com.jello.jello_app.follow.repository.FollowRepository;
+import com.jello.jello_app.enumeration.PostSort;
+import com.jello.jello_app.enumeration.RoleType;
+import com.jello.jello_app.image.dto.ImageDTO;
+import com.jello.jello_app.image.mapper.ImageMapper;
 import com.jello.jello_app.image.service.PostImageService;
 import com.jello.jello_app.post.dto.CreatePostRequestDTO;
 import com.jello.jello_app.post.dto.FilterRequestDTO;
@@ -20,7 +23,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,11 +34,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PostService {
 
+    public static final int MAX_PAGE_SIZE = 50;
+
     private final PostImageService postImageService;
     private final AuthService authService;
     private final PostRepository postRepository;
-    private final FollowRepository followRepository;
     private final TagService tagService;
+    private final PostResponseAssembler postResponseAssembler;
 
     @Transactional
     public PostResponseDTO createPost(CreatePostRequestDTO request, List<MultipartFile> images) {
@@ -54,16 +58,35 @@ public class PostService {
 
         Post savedPost = postRepository.save(post);
 
+        List<ImageDTO> savedImages = List.of();
         if (images != null && !images.isEmpty()) {
-            postImageService.saveImageForPost(images, savedPost);
+            savedImages = postImageService.saveImageForPost(images, savedPost);
         }
 
-        return PostMapper.toDto(savedPost);
+        PostResponseDTO response = PostMapper.toDto(savedPost);
+        response.setImages(savedImages.stream().map(image -> ImageMapper.toImageResponse(image.getId())).toList());
+        return response;
     }
 
     public Post getPostById(Long id) {
         return postRepository.findById(id)
                 .orElseThrow(() -> new PostNotFoundException(id));
+    }
+
+    // Post que o usuario pode ver: banido (ou de usuario banido) so aparece pra moderador
+    public Post getVisiblePost(Long id, User viewer) {
+        Post post = getPostById(id);
+
+        if (!isModerator(viewer) && (post.isBanned() || post.getUser().isBanned())) {
+            throw new PostNotFoundException(id);
+        }
+
+        return post;
+    }
+
+    public PostResponseDTO getPostResponse(Long id) {
+        User viewer = authService.getAuthenticatedUser();
+        return postResponseAssembler.toResponse(getVisiblePost(id, viewer), viewer);
     }
 
     public void deletePost(Long id) {
@@ -77,7 +100,7 @@ public class PostService {
     public void addLike(Long postId) {
         User user = authService.getAuthenticatedUser();
 
-        Post post = getPostById(postId);
+        Post post = getVisiblePost(postId, user);
         post.getLikes().add(user);
     }
 
@@ -98,42 +121,71 @@ public class PostService {
                 .orElseThrow(() -> new PostNotFoundException(postId));
     }
 
+    public PostResponseDTO toResponse(Post post) {
+        return postResponseAssembler.toResponse(post, authService.getAuthenticatedUser());
+    }
+
     public Page<PostResponseDTO> findPosts(FilterRequestDTO filter, int page, int size) {
         User user = authService.getAuthenticatedUser();
 
-        Pageable pageable = PageRequest.of(
-                page,
-                size,
-                Sort.by("createdAt").descending()
-        );
-
-        List<Long> followingIds = followRepository.findUsersFollowedBy(user.getId())
-                .stream()
-                .map(User::getId)
-                .toList();
+        Pageable pageable = buildPageable(page, size);
 
         Specification<Post> spec = Specification
                 .where(PostSpecification.withFilter(filter))
-                .and(PostSpecification.orderByFollowingUser(followingIds));
+                .and(PostSpecification.sortedBy(sortOf(filter)));
 
-        return postRepository.findAll(spec, pageable)
-                .map(post -> PostMapper.toDto(
-                        post,
-                        followingIds.contains(post.getUser().getId())
-                ));
+        if (!isModerator(user)) {
+            spec = spec.and(PostSpecification.onlyVisible());
+        }
+
+        return postResponseAssembler.toPage(postRepository.findAll(spec, pageable), user);
+    }
+
+    // Explorar: todos os posts visiveis (inclusive de quem eu sigo e os meus), na ordem escolhida
+    public Page<PostResponseDTO> findExplorePosts(FilterRequestDTO filter, int page, int size) {
+        User user = authService.getAuthenticatedUser();
+
+        Pageable pageable = buildPageable(page, size);
+
+        Specification<Post> spec = Specification
+                .where(PostSpecification.withFilter(filter))
+                .and(PostSpecification.sortedBy(sortOf(filter)));
+
+        if (!isModerator(user)) {
+            spec = spec.and(PostSpecification.onlyVisible());
+        }
+
+        return postResponseAssembler.toPage(postRepository.findAll(spec, pageable), user);
     }
 
     public Page<PostResponseDTO> getAllPostsByUser(Long userId, FilterRequestDTO filter, int page, int size) {
-        Pageable pageable = PageRequest.of(
-                page,
-                size,
-                Sort.by("createdAt").descending()
-        );
+        User viewer = authService.getAuthenticatedUser();
+
+        Pageable pageable = buildPageable(page, size);
 
         Specification<Post> spec = Specification
                 .where(PostSpecification.withFilter(filter))
-                .and(PostSpecification.byUserId(userId));
+                .and(PostSpecification.byUserId(userId))
+                .and(PostSpecification.sortedBy(sortOf(filter)));
 
-        return postRepository.findAll(spec, pageable).map(PostMapper::toDto);
+        if (!isModerator(viewer)) {
+            spec = spec.and(PostSpecification.onlyVisible());
+        }
+
+        return postResponseAssembler.toPage(postRepository.findAll(spec, pageable), viewer);
+    }
+
+    public static Pageable buildPageable(int page, int size) {
+        int safeSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
+        // sem Sort: a ordem vem do PostSpecification.sortedBy
+        return PageRequest.of(Math.max(page, 0), safeSize);
+    }
+
+    private static PostSort sortOf(FilterRequestDTO filter) {
+        return filter == null || filter.getSort() == null ? PostSort.RECENT : filter.getSort();
+    }
+
+    public static boolean isModerator(User user) {
+        return user != null && user.hasRole(RoleType.ROLE_MODERATOR.getName());
     }
 }

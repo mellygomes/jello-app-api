@@ -5,6 +5,7 @@ import com.jello.jello_app.comment.dto.CommentResponseDTO;
 import com.jello.jello_app.comment.mapper.CommentMapper;
 import com.jello.jello_app.comment.model.Comment;
 import com.jello.jello_app.comment.service.CommentService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,8 +21,8 @@ public class CommentController {
     private final CommentService commentService;
 
     @PostMapping("/{postId}/add")
-    public CommentResponseDTO addComment(@PathVariable Long postId, @RequestBody AddCommentRequestDTO request) {
-        Comment newComment = commentService.addComment(request.getComment(), postId);
+    public CommentResponseDTO addComment(@PathVariable Long postId, @Valid @RequestBody AddCommentRequestDTO request) {
+        Comment newComment = commentService.addComment(request.getComment(), postId, request.getParentId());
         return CommentMapper.toDto(newComment);
     }
 
