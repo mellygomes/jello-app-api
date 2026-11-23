@@ -9,12 +9,14 @@ import com.jello.jello_app.enumeration.RoleType;
 import com.jello.jello_app.event.UserEvent;
 import com.jello.jello_app.follow.dto.FollowStatsDTO;
 import com.jello.jello_app.follow.repository.FollowRepository;
+import com.jello.jello_app.image.repository.PostImageRepository;
 import com.jello.jello_app.image.service.UserAvatarService;
 import com.jello.jello_app.image.service.UserCoverService;
 import com.jello.jello_app.post.repository.PostRepository;
 import com.jello.jello_app.role.model.Role;
 import com.jello.jello_app.role.service.UserRoleService;
 import com.jello.jello_app.user.dto.ProfileDTO;
+import com.jello.jello_app.user.dto.StorageDTO;
 import com.jello.jello_app.user.dto.UpdateUserRequestDTO;
 import com.jello.jello_app.user.exception.UserAlreadyExistsException;
 import com.jello.jello_app.user.exception.UserNotFoundException;
@@ -44,6 +46,7 @@ public class UserService {
     private final PostRepository postRepository;
     private final FollowRepository followRepository;
     private final UserCoverService userCoverService;
+    private final PostImageRepository postImageRepository;
 
     public User register(RegisterRequestDTO request) {
         Role roleUser = userRoleService.getRoleByName(RoleType.ROLE_USER.getName());
@@ -134,5 +137,22 @@ public class UserService {
         user.setBanned(false);
 
         return user;
+    }
+
+    public StorageDTO getUserStorage(Long userId) {
+        long usedBytes = postImageRepository.sumFileSizeByUserId(userId);
+
+        long totalBytes = 500L * 1024 * 1024 * 1024;
+
+        double usedPercentage = Math.min(
+                (double) usedBytes / totalBytes * 100,
+                100
+        );
+
+        return StorageDTO.builder()
+                .usedBytes(usedBytes)
+                .totalBytes(totalBytes)
+                .usedPercentage(usedPercentage)
+                .build();
     }
 }
