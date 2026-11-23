@@ -12,4 +12,8 @@ public interface PostImageRepository extends JpaRepository<PostImage, Long> {
         WHERE i.post.user.id = :userId
     """)
     Long sumFileSizeByUserId(@Param("userId") Long userId);
+
+    // [postId, imageId] sem carregar os bytes da imagem
+    @Query("SELECT i.post.id, i.id FROM PostImage i WHERE i.post.id IN :ids ORDER BY i.id")
+    List<Object[]> findIdsByPostIds(@Param("ids") Collection<Long> ids);
 }

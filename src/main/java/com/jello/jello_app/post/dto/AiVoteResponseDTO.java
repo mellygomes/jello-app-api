@@ -11,7 +11,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AiVoteResponseDTO {
 
-    private int count;
-    private boolean voted;
+    // quantos acham que e IA / arte humana e o voto de quem pediu (null = sem voto)
+    private int ai;
+    private int human;
+    private Boolean myVote;
 
 }

@@ -17,6 +17,9 @@ import lombok.Setter;
 @Table(name = "tb_report_user")
 public class UserReport extends Auditable {
 
+    @Column(columnDefinition = "TEXT")
+    private String content;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "reported_user_id", nullable = false)
     private User reportedUser;
@@ -25,8 +28,8 @@ public class UserReport extends Auditable {
     @JoinColumn(name = "reporter_user_id", nullable = false)
     private User reporterUser;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "moderator_analyst_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "moderator_analyst_id")
     private Moderator moderatorAnalyst;
 
     @Column(name = "is_approved", nullable = false)

@@ -1,6 +1,7 @@
 package com.jello.jello_app.auth.service;
 
 import com.jello.jello_app.auth.dto.LoginRequestDTO;
+import com.jello.jello_app.auth.exception.BannedUserException;
 import com.jello.jello_app.confirmation.model.Confirmation;
 import com.jello.jello_app.confirmation.service.ConfirmationService;
 import com.jello.jello_app.security.user.AppUserDetails;
@@ -29,8 +30,14 @@ public class AuthService {
         Authentication authentication = authenticationManager
                 .authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
         AppUserDetails userDetails = (AppUserDetails) authentication.getPrincipal();
+
+        // So chega aqui com a senha certa, entao pode avisar que a conta foi banida
+        if (userDetails != null && userDetails.isBanned()) {
+            throw new BannedUserException();
+        }
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
         if (userDetails != null && userDetails.getId() != null)
             updateLastLogin(userDetails.getId());

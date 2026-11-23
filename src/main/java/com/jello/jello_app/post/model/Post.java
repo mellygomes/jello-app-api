@@ -8,6 +8,7 @@ import com.jello.jello_app.tag.model.Tag;
 import com.jello.jello_app.user.model.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -43,6 +44,12 @@ public class Post extends Auditable {
     @Column(name = "ai_classified", nullable = false)
     private boolean aiClassified;
 
+    @Column(name = "human_classified", nullable = false)
+    private boolean humanClassified;
+
+    @Column(name = "banned", nullable = false)
+    private boolean banned;
+
     @OneToMany(
             mappedBy = "post",
             cascade = CascadeType.ALL,
@@ -56,9 +63,10 @@ public class Post extends Auditable {
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
-    private List<Comment> comments;
+    private List<Comment> comments = new ArrayList<>();
 
     @ManyToMany
+    @BatchSize(size = 50)
     @JoinTable(
             name = "tb_post_tag",
             joinColumns = @JoinColumn(name = "post_id"),

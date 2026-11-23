@@ -24,6 +24,10 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class PostImageServiceTest {
 
+    // cabecalho de um PNG de verdade, o validador olha esses bytes
+    private static final byte[] PNG_BYTES = {(byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0};
+
+
     @Mock
     private PostImageRepository imageRepository;
 
@@ -41,14 +45,14 @@ class PostImageServiceTest {
                 "file1",
                 "foto-um.png",
                 "image/png",
-                "conteudo mesmo".getBytes()
+                PNG_BYTES
         );
 
         MultipartFile file2 = new MockMultipartFile(
                 "file2",
                 "foto-dois.png",
                 "image/png",
-                "conteudo 2 mesmo".getBytes()
+                PNG_BYTES
         );
 
         List<MultipartFile> files = List.of(file1, file2);

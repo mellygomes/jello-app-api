@@ -8,6 +8,7 @@ import com.jello.jello_app.image.repository.UserCoverRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import com.jello.jello_app.utils.ImageValidator;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -40,17 +41,19 @@ public class UserCoverService {
         }
     }
 
+    // Apaga a capa do banco (usado quando a conta e excluida)
+    public void deleteCover(UserCover cover) {
+        if (cover != null) coverRepository.delete(cover);
+    }
+
     public UserCover updateUserCover(UserCover cover, MultipartFile image) {
-        try {
+        ImageValidator.ValidatedImage validated = ImageValidator.validate(image);
 
-            cover.setFileName(image.getOriginalFilename());
-            cover.setFileType(image.getContentType());
-            cover.setFileSize(image.getSize());
-            cover.setData(image.getBytes());
+        cover.setFileName(validated.fileName());
+        cover.setFileType(validated.contentType());
+        cover.setFileSize((long) validated.bytes().length);
+        cover.setData(validated.bytes());
 
-            return coverRepository.save(cover);
-        } catch (IOException ex) {
-            throw new FileReadException(cover.getFileName(), ex);
-        }
+        return coverRepository.save(cover);
     }
 }

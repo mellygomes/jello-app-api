@@ -3,17 +3,21 @@ package com.jello.jello_app.post.dto;
 import com.jello.jello_app.image.dto.ImageResponseDTO;
 import com.jello.jello_app.tag.dto.TagResponseDTO;
 import com.jello.jello_app.user.dto.UserDTO;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Data
 @Builder
+@AllArgsConstructor
 public class PostResponseDTO {
     private Long id;
+    private Long userId;
     private String title;
     private String content;
     private UserDTO user;
@@ -23,4 +27,11 @@ public class PostResponseDTO {
     private List<TagResponseDTO> tags;
     private LocalDateTime createdAt;
     private boolean visible;
+    private boolean likedByMe;
+    // NONE, AI ou HUMAN
+    private String classification;
+    private boolean aiClassified;
+    private boolean banned;
+    private AiVoteResponseDTO aiVotes;
+    private PostAuthorDTO author;
 }
