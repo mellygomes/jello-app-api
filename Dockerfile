@@ -16,6 +16,7 @@ ENTRYPOINT ["java", \
   "-XX:+UseSerialGC", \
   "-Xmx256m", \
   "-Xss512k", \
+  "-Duser.timezone=America/Sao_Paulo", \
   "-XX:MaxMetaspaceSize=128m", \
   "-XX:ReservedCodeCacheSize=64m", \
   "-XX:TieredStopAtLevel=1", \
